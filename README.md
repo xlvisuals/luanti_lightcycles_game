@@ -35,10 +35,10 @@ This is a full standalone **game**, not a mod you add to something else — just
 Once you're in the world, everyone gets a lobby panel automatically —
 press **E** any time you're not actively racing to bring it back up if
 you've closed it. From there (or via chat commands, below) you can join
-the waiting roster and start a match once there are enough players (an
+the waiting roster and start a race once there are enough players (an
 admin can start solo, for testing).
 
-The very first time anyone starts a match on a fresh world, the arena is
+The very first time anyone starts a race on a fresh world, the arena is
 built automatically — this can take a moment the first time, then it's
 instant.
 
@@ -56,9 +56,11 @@ instant.
 You're always moving forward — there's no key to stop. Run into any wall
 (yours, someone else's, or the arena boundary) and you're derezzed.
 
+
 ### Scoring
 
-Every racer scores based on where they finished, not just the winner:
+Every racer scores based on how long they lasted, not just the winner. The first player 
+to be eliminated places last, the last player racing places first.
 
 | Placement | Points |
 |---|---|
@@ -71,25 +73,28 @@ Every racer scores based on where they finished, not just the winner:
 | 7th | 6 |
 | 8th | 4 |
 
-A round with no survivors doesn't award 1st place to anyone, since nobody
+A race with no survivors doesn't award 1st place to anyone, since nobody
 actually won. Racers eliminated simultaneously (e.g. a head-on collision)
 share the same placement, and the next rank down is left vacant rather
 than shifting up to fill the gap.
 
 On top of placement, collecting a point powerup adds 3 points, and
 eliminating an opponent with a shot adds 5 — both on top of whatever
-you eventually place.
+points you get for your place at the end of a race.
 
-Scores reset each session — either when a second player joins after
-someone's been playing solo, or after a set number of matches (5 by
+Scores reset each game — either when a second player joins after
+someone's been playing solo, or after a set number of races (5 by
 default, admin-configurable), at which point whoever has the most points
-is declared the overall winner and everyone starts fresh. A live
-"Race: N/M" counter (with a running clock) is always visible, and while a
-race is actually in progress it's joined by a live standings table
-showing everyone's current rank, this race's running score, and their
-overall score — sorted by whoever's still alive first, then by points.
-Once a race ends, that same table shows the final result until the next
+is declared the overall winner and everyone starts fresh. 
+
+A live "Race: N/M" counter (with a running clock) is always visible, and while a
+race is in progress it's joined by a live standings table showing everyone's 
+rank in the current race, this race's running score, and their overall game score 
+— sorted by whoever's still alive first, then by points.
+That same table shows the final result at the end of a race or game until the next
 one starts.
+
+When one player is playing solo (no other players, no bots) the game ends when the last point powerup was collected - it's a race against time to collect them as fast as possible.
 
 ### Score table
 
@@ -106,8 +111,8 @@ Four kinds may appear on a given map, depending on how it's set up (an
 admin can toggle each on/off from the lobby panel):
 
 - **Point powerup** — placed as part of the level itself, worth bonus
-  points on pickup (3 by default). Doesn't respawn until the next match.
-- **Boost powerup** — spawns at a random spot during a match and vanishes
+  points on pickup (3 by default). Doesn't respawn until the next race.
+- **Boost powerup** — spawns at a random spot during a race and vanishes
   if not grabbed in time; instantly refills your boost bar.
 - **Shield powerup** — lets you break straight through the next trail
   wall you hit, instead of crashing into it, consuming one charge.
@@ -120,7 +125,7 @@ Everyone:
 - **`/lc`** or **`/lc menu`** — opens the lobby panel
 - **`/lc join`** — join the lobby
 - **`/lc leave`** — leave the lobby
-- **`/lc start`** — start a match
+- **`/lc start`** — start a race
 - **`/lc score`** — shows your current score in chat
 - **`/lc help`** — opens the in-game help screen
 
@@ -129,9 +134,9 @@ Admin-only:
 - **`/lcspawns`** — lists every spawn point on the current map
 - **`/lcspawns <1-8>`** — teleports you to that exact spawn point, facing
   the way that racer would
-- **`/lcpause`** — pauses match movement and grants yourself free-look
+- **`/lcpause`** — pauses race movement and grants yourself free-look
   and free-move (e.g. to line up a screenshot); run it again to resume.
-  The match clock keeps running while paused.
+  The clock keeps running while movement is paused.
 - **`/lc show [score|names|race|boost|all]`** — shows the scoreboard,
   player names above cycles, the race counter, the boost bar, or
   everything (the default)
@@ -146,7 +151,7 @@ privileges and a set of tools for editing the arena:
 - **Disc** — a fast-digging tool.
 - **Wall** — the ground and boundary block; right-click to place.
 - **Point-powerup spawner** — place one to spawn a point powerup above it
-  each match.
+  each race.
 - **8 numbered player-spawn markers** — place these to define exactly
   where (and which direction) each racer starts.
 
@@ -170,7 +175,7 @@ See [`README-DEV.md`](README-DEV.md) for the full technical guide
 
 ![LightCycles shield breaking trail](screenshots/shield_breaking_trail.png "Shield breaking trail")
 
-![LightCycles build mode](screenshots/build_mode_.png "Build mode")
+![LightCycles build mode](screenshots/build_mode.png "Build mode")
 
 ![LightCycles map top](screenshots/map_top.png "Map top")
 
