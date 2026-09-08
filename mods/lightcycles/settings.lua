@@ -5,7 +5,7 @@ math.randomseed(os.time())
 
 lightcycles.settings = {
 
-    title                         = "Lightcycles v1.0",
+    title                         = "Lightcycles v1.0.1",
 
     arena_center                  = { x = 0, y = 50, z = 0 }, -- built well above ground, self-contained
     arena_size                    = 101,                      -- floor is arena_size x arena_size (101x101) - needs to be uneven for fair distances
