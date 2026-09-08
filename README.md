@@ -18,7 +18,7 @@ This is a full standalone **game**, not a mod you add to something else — just
 ## Installing
 
 1. Install [Luanti](https://www.luanti.org/).
-2. Run the latest installer for your platform from [Releases](/releases/latest).
+2. Run the latest installer for your platform from [Releases](https://github.com/xlvisuals/luanti_lightcycles_game/releases/latest).
 
 Alternatively, you can simply download a .zip of this and copy it's content into a `lightcycles` directory in Luanti's `games/` directory:
    - **Windows**: `%APPDATA%\Minetest\games\lightcycles\`
