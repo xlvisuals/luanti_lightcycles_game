@@ -17,17 +17,23 @@ This is a full standalone **game**, not a mod you add to something else — just
 
 ## Installing
 
-1. Copy this whole folder into Luanti's `games/` directory (rename it to
-   whatever you like — the folder name becomes the internal game id):
-   - **Windows**: `%APPDATA%\Luanti\games\lightcycles\` (or `...\.minetest\games\...`
-     for older Minetest installs)
-   - **Linux**: `~/.minetest/games/lightcycles/` (or `~/.luanti/games/lightcycles/`)
+1. Install [Luanti](https://www.luanti.org/).
+2. Run the latest installer for your platform from [Releases](/releases/latest).
+
+Alternatively, you can simply download a .zip of this and copy it's content into a `lightcycles` directory in Luanti's `games/` directory:
+   - **Windows**: `%APPDATA%\Minetest\games\lightcycles\`
+   - **Linux**: `~/.minetest/games/lightcycles/`
    - **macOS**: `~/Library/Application Support/minetest/games/lightcycles/`
    - **Dedicated server**: `<server install dir>/games/lightcycles/`
-   - You can also find the folder by starting Luanti, the clicking on "Open User Data Directory" in the "About" panel.
-2. Launch Luanti, go to **Start Game**, and pick **LightCycles** as the game
-   when creating a new world.
-3. Create the world (any name/seed — the game creates the default map) and play.
+   - You can also find the folder by starting Luanti, then clicking on "Open User Data Directory" in the "About" panel.
+
+## Running
+
+1. Launch Luanti
+2. Go to **Start Game**, and pick **LightCycles** as the game
+3. When running for the first time, click **New** to create a world (any name/seed — the game creates the default map)
+4. Click **Play Game**
+   - If you want to host a server, check **Host Server** on below `Start Game`
 
 
 ## Playing
