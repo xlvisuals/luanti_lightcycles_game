@@ -184,6 +184,22 @@ marker. A player spawns facing whichever direction you were facing when
 you placed their marker. Boost, shield, and ammo powerups don't need
 spawners at all — they appear at random spots on their own.
 
+Use the `giveme` command to refill any blocks you run out of or lost:
+- `/giveme lightcycles:boundary 99`
+- `/giveme lightcycles:powerup_point_spawner 99`
+- `/giveme lightcycles:spawnpad_1 1`
+- `/giveme lightcycles:spawnpad_2 1`
+- `/giveme lightcycles:spawnpad_3 1`
+- `/giveme lightcycles:spawnpad_4 1`
+- `/giveme lightcycles:spawnpad_5 1`
+- `/giveme lightcycles:spawnpad_6 1`
+- `/giveme lightcycles:spawnpad_7 1`
+- `/giveme lightcycles:spawnpad_8 1`
+- `/giveme lightcycles:build_pick 1`
+  
+You might have to check your inventory ('I' key) in case the blocks didn't land in a hotbar slot. 
+Make sure to only have only one of each spawnpad and that they point in the desired direction.
+
 Once you're happy with a layout, bring the lobby panel back up (**E**)
 and press **Save Map** to save it under a new name — this captures the
 current arena as a `.mts` schematic in the world folder, and it
