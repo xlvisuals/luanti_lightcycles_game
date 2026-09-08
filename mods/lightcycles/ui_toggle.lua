@@ -14,7 +14,6 @@ local function set_boost_hidden(hidden)
     end
 end
 
---
 local function set_names_hidden(hidden)
     lightcycles.names_hidden = hidden
     for name, pdata in pairs(lightcycles.racers) do

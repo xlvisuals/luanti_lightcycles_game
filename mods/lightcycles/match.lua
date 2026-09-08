@@ -11,7 +11,6 @@ local finish_match
 lightcycles.elimination_batches = {}
 
 
---
 local function spawn_bots(real_count)
     if S.bot_count <= 0 then return end
 
@@ -30,7 +29,6 @@ local function spawn_bots(real_count)
         local bot_name = "Bot " .. i .. " (" .. lightcycles.bots.behavior_letter(behavior) .. ")"
         local color = S.colors[index]
 
-        --
 
         local pdata = {
             color = color,
@@ -178,7 +176,6 @@ local function count_racers()
     return n
 end
 
---
 local function award_match_points(top_tier_names)
     if top_tier_names == nil then return end
 
@@ -234,8 +231,6 @@ end)
 local timeout_job = nil
 local clock_tick_job = nil
 
---
---
 local function match_clock_tick(generation)
     if lightcycles.match_generation ~= generation then return end
     local phase = lobby_system.state.phase
@@ -500,7 +495,6 @@ lobby_system.register_game({
         return sp.pos, sp.yaw
     end,
 
-    --
     on_match_prepare = function(count)
         lightcycles.clear_trails()
         alive_count = 0
@@ -613,7 +607,6 @@ lobby_system.register_game({
         lightcycles.racers[name] = nil
     end,
 
-    --
     on_racing_ended = function()
         lightcycles.hud.update_race_table()
     end,
@@ -813,7 +806,6 @@ lobby_system.register_game({
             end
             return true
         elseif fields.lc_reset_game then
-            --
             if is_admin then
                 local phase = lobby_system.state.phase
                 if phase == "lobby" or phase == "ended" then

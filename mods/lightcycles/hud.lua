@@ -7,12 +7,9 @@ local function ids_for(name)
     return hud_ids[name]
 end
 
---
---
 local RACE_TABLE_COLOR = "#E0FFFF"
 local RACE_TABLE_DIED_COLOR = "#FF4040"
 
---
 local COL_GAP = 14
 local COL_WIDTH = { gs = 55, rs = 50, rr = 40, name = 170 }
 local function col_offset_x(scale, col)
@@ -127,8 +124,6 @@ function lightcycles.hud.update_race_table()
     end
 end
 
---
---
 local race_table_wanted = false
 
 local race_table_admin_hidden = false
@@ -185,7 +180,6 @@ function lightcycles.hud.set_race_table_admin_hidden(hidden)
     end
 end
 
---
 local BAR_TEXTURE_W, BAR_TEXTURE_H = 4, 16
 local BAR_WIDTH, BAR_HEIGHT = 220, 22 -- on-screen pixels at hud_scale = 1
 local BAR_GAP = 10 -- space between the "Boost:" label and the bar's own left edge
@@ -325,7 +319,6 @@ function lightcycles.hud.add_boost_bar(player)
             size = { x = 1.1 * scale, y = 1.1 * scale },
         })
     end
-    --
     local flags = player:hud_get_flags()
     flags.hotbar = false
     player:hud_set_flags(flags)

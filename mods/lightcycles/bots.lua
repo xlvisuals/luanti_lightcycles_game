@@ -1,4 +1,3 @@
---
 
 lightcycles.bots = {}
 
@@ -137,7 +136,6 @@ local function powerup_still_at(target)
         or n == "lightcycles:powerup_shield" or n == "lightcycles:powerup_ammo"
 end
 
---
 local function steer_towards(pos, dir, target)
     local dx = target.x - pos.x
     local dz = target.z - pos.z

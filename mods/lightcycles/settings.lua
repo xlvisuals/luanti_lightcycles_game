@@ -103,7 +103,6 @@ lightcycles.settings = {
     shot_lifetime             = 6,   -- seconds a bolt travels before despawning unclaimed (comfortably longer than crossing the whole arena)
     kill_by_shot_points       = 5,   -- bonus match points for eliminating another racer with a shot (on top of their own placement points)
 
-    --
     starting_ammo             = 1, -- shots
     starting_shield           = 1, -- charges (each one breaks through one trail wall)
     starting_boost            = 30, -- bar charge, 0-100

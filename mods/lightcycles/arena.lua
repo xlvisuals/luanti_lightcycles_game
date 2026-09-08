@@ -120,7 +120,6 @@ function lightcycles.build_arena(on_done)
     end)
 end
 
---
 function lightcycles.ensure_arena(on_done)
     if lightcycles.storage:get_int("arena_built") == 1 then
         if on_done then on_done() end
@@ -139,7 +138,6 @@ function lightcycles.force_rebuild_arena(on_done)
     end)
 end
 
---
 local function sweep_wall_nodes(match_color)
     local b = bounds()
     local y = b.y0 + 1
@@ -164,7 +162,6 @@ function lightcycles.clear_color_trail(color)
     sweep_wall_nodes(color)
 end
 
---
 function lightcycles.spawn_points()
     local b = bounds()
     local scan_y = b.y0

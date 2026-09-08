@@ -1,5 +1,3 @@
---
---
 
 lobby_system.sounds = {}
 

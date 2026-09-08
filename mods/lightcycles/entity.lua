@@ -1,4 +1,3 @@
---
 local function face_textures(color)
     return {
         "lightcycles_cycle_" .. color .. "_top.png",    -- Y+

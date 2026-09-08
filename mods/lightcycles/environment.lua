@@ -1,4 +1,3 @@
---
 minetest.register_on_mods_loaded(function()
     minetest.after(0, function()
         minetest.settings:set("time_speed", "0") -- stop the clock
@@ -11,6 +10,7 @@ minetest.register_on_joinplayer(function(player)
 
     local flags = player:hud_get_flags()
     flags.wielditem = false
+    flags.crosshair = false
     player:hud_set_flags(flags)
 
     player:set_sky({

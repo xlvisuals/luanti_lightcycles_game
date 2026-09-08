@@ -1,7 +1,3 @@
---
---
---
---
 
 lobby_system.lobby = {}
 local S = lobby_system.settings
@@ -297,8 +293,6 @@ function lobby_system.player_died(name, message)
     lobby_system.sounds.play_eliminated(name)
 end
 
---
---
 local pending_new_game = false
 
 function lobby_system.apply_pending_new_game()
@@ -348,7 +342,6 @@ function lobby_system.player_won(name, message, score_amount, flash_duration)
     lobby_system.hud.update_all_scoreboards()
 end
 
---
 function lobby_system.check_overall_winner()
     if pending_new_game then return nil end -- see the guard comment on check_matches_per_game_winner above - same reasoning
     if not S.score_to_win_game then return nil end

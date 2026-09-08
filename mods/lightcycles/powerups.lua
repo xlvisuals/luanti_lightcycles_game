@@ -1,5 +1,3 @@
---
---
 
 local S = lightcycles.settings
 
@@ -18,7 +16,6 @@ function lightcycles.despawn_point_powerup_entities()
     active_point_powerups = {}
 end
 
---
 function lightcycles.spawn_point_powerup_entities()
     lightcycles.despawn_point_powerup_entities()
     had_point_powerups_this_match = false

@@ -1,6 +1,3 @@
---
---
---
 
 local S = lightcycles.settings
 local HALF_PI = math.pi / 2
@@ -46,7 +43,6 @@ minetest.register_globalstep(function(dtime)
                     controls = player:get_player_control()
                 end
 
-                --
                 if controls.left and not pdata.was_left then
                     pdata.yaw = pdata.yaw + HALF_PI
                     if player then player:set_look_horizontal(pdata.yaw) end
@@ -70,7 +66,6 @@ minetest.register_globalstep(function(dtime)
                 end
                 pdata.was_sneak = controls.sneak
 
-                --
                 local speed_mult = 1.0
                 local pitch_state = "normal"
                 if controls.down then
@@ -131,7 +126,6 @@ minetest.register_globalstep(function(dtime)
 
                 local is_pit = lightcycles.is_pit(ahead_rounded.x, ahead_rounded.z)
 
-                --
                 if is_hazard then
                     local is_trail_wall = node.name:match("^lightcycles:wall_") ~= nil
                     if pdata.shield > 0 and is_trail_wall then

@@ -1,10 +1,3 @@
---
---
---
---
---
---
---
 
 local S = lightcycles.settings
 
@@ -199,8 +192,6 @@ function lightcycles.export_map_filename(raw_name)
     return filename
 end
 
---
---
 function lightcycles.export_current_map(filename, on_done)
     local b = lightcycles.arena_bounds()
     local p1 = { x = b.min_x, y = S.map_work_area.min.y, z = b.min_z }

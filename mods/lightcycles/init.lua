@@ -19,7 +19,6 @@ dofile(modpath .. "/mapbuild.lua")
 dofile(modpath .. "/pause.lua")
 dofile(modpath .. "/ui_toggle.lua")
 
---
 minetest.register_on_mods_loaded(function()
     minetest.after(0, function()
         lightcycles.ensure_map_loaded(function()

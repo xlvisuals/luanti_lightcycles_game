@@ -57,7 +57,6 @@ function lobby_system.add_score(name, amount)
     lobby_system.storage:set_int("score_" .. name, cur + (amount or 1))
 end
 
---
 function lobby_system.reset_all_scores()
     local stored = lobby_system.storage:to_table()
     for key, _ in pairs(stored.fields or {}) do

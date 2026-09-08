@@ -33,7 +33,6 @@ minetest.register_node("lightcycles:boundary", {
     end,
 })
 
---
 for n = 1, 8 do
     minetest.register_node("lightcycles:spawnpad_" .. n, {
         description = "Lightcycle Spawn Point " .. n .. " (place facing the direction that racer should start moving)",
@@ -56,7 +55,6 @@ for n = 1, 8 do
     })
 end
 
---
 
 minetest.register_node("lightcycles:powerup_point_spawner", {
     description = "Lightcycle Point Powerup Spawner (level-designer placed, admin/build-mode only to dig)",

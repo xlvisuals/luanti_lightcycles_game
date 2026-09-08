@@ -69,6 +69,7 @@ function lightcycles.set_build_mode(name, on)
 
     local flags = player:hud_get_flags()
     flags.wielditem = on
+    flags.crosshair = on
     player:hud_set_flags(flags)
 
     if not lightcycles.racers[name] then
