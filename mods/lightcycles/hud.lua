@@ -1,0 +1,411 @@
+
+lightcycles.hud = {}
+local hud_ids = {} -- name -> { boost_bg/boost_fill/boost_label = id, speed = id, race_table = id, ... }
+
+local function ids_for(name)
+    hud_ids[name] = hud_ids[name] or {}
+    return hud_ids[name]
+end
+
+--
+--
+local RACE_TABLE_COLOR = "#E0FFFF"
+local RACE_TABLE_DIED_COLOR = "#FF4040"
+
+--
+local COL_GAP = 14
+local COL_WIDTH = { gs = 55, rs = 50, rr = 40, name = 170 }
+local function col_offset_x(scale, col)
+    local x = -12
+    local order = { "gs", "rs", "rr", "name" }
+    for _, c in ipairs(order) do
+        if c == col then return x * scale end
+        x = x - COL_WIDTH[c] - COL_GAP
+    end
+end
+
+local function race_table_rows()
+    local rows = {}
+    for name, pdata in pairs(lightcycles.racers) do
+        table.insert(rows, {
+            name = name,
+            rank = pdata.race_rank,
+            race_score = pdata.race_score,
+            game_score = lobby_system.get_score(name),
+            alive = pdata.alive,
+        })
+    end
+    return rows
+end
+
+local function sort_race_table_rows(rows)
+    local phase = lobby_system.state.phase
+    if phase == "playing" or phase == "countdown" then
+        table.sort(rows, function(a, b)
+            if a.rank ~= b.rank then return a.rank < b.rank end
+            if a.race_score ~= b.race_score then return a.race_score > b.race_score end
+            if a.game_score ~= b.game_score then return a.game_score > b.game_score end
+            return a.name < b.name
+        end)
+    elseif phase == "ended" then
+        table.sort(rows, function(a, b)
+            if a.race_score ~= b.race_score then return a.race_score > b.race_score end
+            if a.game_score ~= b.game_score then return a.game_score > b.game_score end
+            return a.name < b.name
+        end)
+    else -- "lobby"
+        table.sort(rows, function(a, b)
+            if a.game_score ~= b.game_score then return a.game_score > b.game_score end
+            return a.name < b.name
+        end)
+    end
+    return rows
+end
+
+local last_race_rows = nil
+
+function lightcycles.hud.snapshot_race_table()
+    last_race_rows = race_table_rows()
+end
+
+local function current_race_table_rows()
+    local phase = lobby_system.state.phase
+    local rows
+    if phase == "playing" or phase == "countdown" then
+        rows = race_table_rows()
+    elseif phase == "ended" then
+        rows = last_race_rows or {}
+    else
+        rows = {}
+        for _, r in ipairs(last_race_rows or {}) do
+            table.insert(rows, {
+                name = r.name,
+                rank = r.rank,
+                race_score = r.race_score,
+                game_score = lobby_system.get_score(r.name),
+                alive = r.alive,
+            })
+        end
+    end
+    return sort_race_table_rows(rows)
+end
+
+local function race_table_column_texts()
+    local rows = current_race_table_rows()
+    local cols = {
+        name = { minetest.colorize(RACE_TABLE_COLOR, "Name") },
+        rr = { minetest.colorize(RACE_TABLE_COLOR, "RR") },
+        rs = { minetest.colorize(RACE_TABLE_COLOR, "RS") },
+        gs = { minetest.colorize(RACE_TABLE_COLOR, "GS") },
+    }
+    for _, r in ipairs(rows) do
+        local color = r.alive and RACE_TABLE_COLOR or RACE_TABLE_DIED_COLOR
+        local displayed_rank = r.rank == 0 and "" or tostring(r.rank)
+        table.insert(cols.name, minetest.colorize(color, r.name))
+        table.insert(cols.rr, minetest.colorize(color, displayed_rank))
+        table.insert(cols.rs, minetest.colorize(color, tostring(r.race_score)))
+        table.insert(cols.gs, minetest.colorize(color, tostring(r.game_score)))
+    end
+    return {
+        name = table.concat(cols.name, "\n"),
+        rr = table.concat(cols.rr, "\n"),
+        rs = table.concat(cols.rs, "\n"),
+        gs = table.concat(cols.gs, "\n"),
+    }
+end
+
+function lightcycles.hud.update_race_table()
+    local texts = race_table_column_texts()
+    for _, player in ipairs(minetest.get_connected_players()) do
+        local ids = ids_for(player:get_player_name())
+        if ids.race_table_name then
+            player:hud_change(ids.race_table_name, "text", texts.name)
+            player:hud_change(ids.race_table_rr, "text", texts.rr)
+            player:hud_change(ids.race_table_rs, "text", texts.rs)
+            player:hud_change(ids.race_table_gs, "text", texts.gs)
+        end
+    end
+end
+
+--
+--
+local race_table_wanted = false
+
+local race_table_admin_hidden = false
+
+local function apply_race_table_visibility(player)
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    local should_show = race_table_wanted and not race_table_admin_hidden
+    if should_show then
+        if not ids.race_table_name then
+            local scale = lobby_system.get_hud_scale(name)
+            local texts = race_table_column_texts()
+            local y = (12 + 34 * scale)
+            local size = { x = 1.1 * scale, y = 1.1 * scale }
+            ids.race_table_name = player:hud_add({
+                type = "text", position = { x = 1, y = 0 }, alignment = { x = -1, y = 1 },
+                offset = { x = col_offset_x(scale, "name"), y = y },
+                number = 0xE0FFFF, text = texts.name, scale = { x = 100, y = 100 }, size = size,
+            })
+            ids.race_table_rr = player:hud_add({
+                type = "text", position = { x = 1, y = 0 }, alignment = { x = -1, y = 1 },
+                offset = { x = col_offset_x(scale, "rr"), y = y },
+                number = 0xE0FFFF, text = texts.rr, scale = { x = 100, y = 100 }, size = size,
+            })
+            ids.race_table_rs = player:hud_add({
+                type = "text", position = { x = 1, y = 0 }, alignment = { x = -1, y = 1 },
+                offset = { x = col_offset_x(scale, "rs"), y = y },
+                number = 0xE0FFFF, text = texts.rs, scale = { x = 100, y = 100 }, size = size,
+            })
+            ids.race_table_gs = player:hud_add({
+                type = "text", position = { x = 1, y = 0 }, alignment = { x = -1, y = 1 },
+                offset = { x = col_offset_x(scale, "gs"), y = y },
+                number = 0xE0FFFF, text = texts.gs, scale = { x = 100, y = 100 }, size = size,
+            })
+        end
+    elseif ids.race_table_name then
+        for _, id_key in ipairs({ "race_table_name", "race_table_rr", "race_table_rs", "race_table_gs" }) do
+            player:hud_remove(ids[id_key])
+            ids[id_key] = nil
+        end
+    end
+end
+
+function lightcycles.hud.set_race_table_visible(player, visible)
+    lobby_system.hud.set_scoreboard_hidden(visible)
+    race_table_wanted = visible
+    apply_race_table_visibility(player)
+end
+
+function lightcycles.hud.set_race_table_admin_hidden(hidden)
+    race_table_admin_hidden = hidden
+    for _, player in ipairs(minetest.get_connected_players()) do
+        apply_race_table_visibility(player)
+    end
+end
+
+--
+local BAR_TEXTURE_W, BAR_TEXTURE_H = 4, 16
+local BAR_WIDTH, BAR_HEIGHT = 220, 22 -- on-screen pixels at hud_scale = 1
+local BAR_GAP = 10 -- space between the "Boost:" label and the bar's own left edge
+
+local function boost_bg_params(hud_scale)
+    return {
+        offset = { x = 0, y = 20 * hud_scale },
+        scale = { x = (BAR_WIDTH * hud_scale) / BAR_TEXTURE_W, y = (BAR_HEIGHT * hud_scale) / BAR_TEXTURE_H },
+    }
+end
+
+local function boost_fill_params(hud_scale, percent)
+    percent = math.max(0, math.min(100, percent or 0))
+    return {
+        offset = { x = -(BAR_WIDTH * hud_scale) / 2, y = 20 * hud_scale },
+        scale = {
+            x = (BAR_WIDTH * hud_scale * (percent / 100)) / BAR_TEXTURE_W,
+            y = (BAR_HEIGHT * hud_scale) / BAR_TEXTURE_H,
+        },
+    }
+end
+
+function lightcycles.hud.set_boost_visible(player, visible)
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    if visible then
+        lightcycles.hud.add_boost_bar(player)
+        local pdata = lightcycles.racers[name]
+        if pdata then
+            lightcycles.hud.update_boost_bar(player, pdata.boost)
+        end
+    else
+        for _, id_key in ipairs({ "boost_bg", "boost_fill", "boost_label", "speed" }) do
+            if ids[id_key] then
+                player:hud_remove(ids[id_key])
+                ids[id_key] = nil
+            end
+        end
+    end
+end
+
+function lightcycles.hud.add_boost_bar(player)
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    local scale = lobby_system.get_hud_scale(name)
+
+    if not ids.boost_bg then
+        local p = boost_bg_params(scale)
+        ids.boost_bg = player:hud_add({
+            type = "image",
+            position = { x = 0.5, y = 0 },
+            offset = p.offset,
+            alignment = { x = 0, y = 1 },
+            text = "lightcycles_boost_bar_bg.png",
+            scale = p.scale,
+        })
+    end
+    if not ids.boost_fill then
+        local p = boost_fill_params(scale, 0)
+        ids.boost_fill = player:hud_add({
+            type = "image",
+            position = { x = 0.5, y = 0 },
+            offset = p.offset,
+            alignment = { x = 1, y = 1 },
+            text = "lightcycles_boost_bar_fill.png",
+            scale = p.scale,
+        })
+    end
+    local bar_mid_y = (20 + BAR_HEIGHT / 2) * scale
+    local bar_half_w = (BAR_WIDTH / 2) * scale
+    if not ids.boost_label then
+        ids.boost_label = player:hud_add({
+            type = "text",
+            position = { x = 0.5, y = 0 },
+            offset = { x = -bar_half_w - BAR_GAP * scale, y = bar_mid_y },
+            alignment = { x = -1, y = 0 },
+            number = 0xFFFFFF,
+            text = "Boost:",
+            scale = { x = 100, y = 100 },
+            size = { x = 1.4 * scale, y = 1.4 * scale },
+        })
+    end
+    if not ids.speed then
+        ids.speed = player:hud_add({
+            type = "text",
+            position = { x = 0.5, y = 0 },
+            offset = { x = 0, y = (20 + BAR_HEIGHT + 11) * scale },
+            alignment = { x = 0, y = 1 },
+            number = 0xFFFFFF,
+            text = "Speed: 100",
+            scale = { x = 100, y = 100 },
+            size = { x = 1.4 * scale, y = 1.4 * scale },
+        })
+    end
+
+    if not ids.shield_icon then
+        ids.shield_icon = player:hud_add({
+            type = "image",
+            position = { x = 0.5, y = 1 },
+            offset = { x = 35 * scale, y = -60 * scale },
+            alignment = { x = 0, y = 0 },
+            text = "", -- empty = invisible until at least one shield is held
+            scale = { x = 3 * scale, y = 3 * scale },
+        })
+    end
+    if not ids.shield_count then
+        ids.shield_count = player:hud_add({
+            type = "text",
+            position = { x = 0.5, y = 1 },
+            offset = { x = 53 * scale, y = -42 * scale },
+            alignment = { x = -1, y = 1 },
+            number = 0xFFFFFF,
+            text = "",
+            scale = { x = 100, y = 100 },
+            size = { x = 1.1 * scale, y = 1.1 * scale },
+        })
+    end
+    if not ids.ammo_icon then
+        ids.ammo_icon = player:hud_add({
+            type = "image",
+            position = { x = 0.5, y = 1 },
+            offset = { x = -35 * scale, y = -60 * scale },
+            alignment = { x = 0, y = 0 },
+            text = "", -- empty = invisible until at least one shot is held
+            scale = { x = 3 * scale, y = 3 * scale },
+        })
+    end
+    if not ids.ammo_count then
+        ids.ammo_count = player:hud_add({
+            type = "text",
+            position = { x = 0.5, y = 1 },
+            offset = { x = -17 * scale, y = -42 * scale },
+            alignment = { x = -1, y = 1 },
+            number = 0xFFFFFF,
+            text = "",
+            scale = { x = 100, y = 100 },
+            size = { x = 1.1 * scale, y = 1.1 * scale },
+        })
+    end
+    --
+    local flags = player:hud_get_flags()
+    flags.hotbar = false
+    player:hud_set_flags(flags)
+end
+
+function lightcycles.hud.update_boost_bar(player, percent)
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    if not ids.boost_fill then return end
+    percent = math.max(0, math.min(100, percent or 0))
+    local scale = lobby_system.get_hud_scale(name)
+    local p = boost_fill_params(scale, percent)
+    player:hud_change(ids.boost_fill, "scale", p.scale)
+end
+
+function lightcycles.hud.update_speed(player, speed_percent)
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    if not ids.speed then return end
+    player:hud_change(ids.speed, "text", "Speed: " .. math.floor(speed_percent + 0.5))
+end
+
+function lightcycles.hud.update_shield(player, count)
+    if not player then return end
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    if not ids.shield_icon or not ids.shield_count then return end
+    if count and count > 0 then
+        player:hud_change(ids.shield_icon, "text", "lightcycles_powerup_shield.png")
+        player:hud_change(ids.shield_count, "text", count >= 2 and ("x" .. count) or "")
+    else
+        player:hud_change(ids.shield_icon, "text", "")
+        player:hud_change(ids.shield_count, "text", "")
+    end
+end
+
+function lightcycles.hud.update_ammo(player, count)
+    if not player then return end
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    if not ids.ammo_icon or not ids.ammo_count then return end
+    if count and count > 0 then
+        player:hud_change(ids.ammo_icon, "text", "lightcycles_powerup_ammo.png")
+        player:hud_change(ids.ammo_count, "text", count >= 2 and ("x" .. count) or "")
+    else
+        player:hud_change(ids.ammo_icon, "text", "")
+        player:hud_change(ids.ammo_count, "text", "")
+    end
+end
+
+function lightcycles.hud.remove_boost_bar(player)
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    for _, id_key in ipairs({ "boost_bg", "boost_fill", "boost_label", "speed" }) do
+        if ids[id_key] then
+            player:hud_remove(ids[id_key])
+            ids[id_key] = nil
+        end
+    end
+    if ids.shield_icon then
+        player:hud_remove(ids.shield_icon)
+        ids.shield_icon = nil
+    end
+    if ids.shield_count then
+        player:hud_remove(ids.shield_count)
+        ids.shield_count = nil
+    end
+    if ids.ammo_icon then
+        player:hud_remove(ids.ammo_icon)
+        ids.ammo_icon = nil
+    end
+    if ids.ammo_count then
+        player:hud_remove(ids.ammo_count)
+        ids.ammo_count = nil
+    end
+    local flags = player:hud_get_flags()
+    flags.hotbar = true
+    player:hud_set_flags(flags)
+end
+
+minetest.register_on_leaveplayer(function(player)
+    hud_ids[player:get_player_name()] = nil
+end)
