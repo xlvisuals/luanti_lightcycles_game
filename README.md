@@ -197,7 +197,7 @@ Use the `giveme` command to refill any blocks you run out of or lost:
 - `/giveme lightcycles:spawnpad_8 1`
 - `/giveme lightcycles:build_pick 1`
   
-You might have to check your inventory ('I' key) in case the blocks didn't land in a hotbar slot. 
+You might have to check your inventory (**I**) in case the blocks didn't land in a hotbar slot. 
 Make sure to only have only one of each spawnpad and that they point in the desired direction.
 
 Once you're happy with a layout, bring the lobby panel back up (**E**)
@@ -205,8 +205,6 @@ and press **Save Map** to save it under a new name — this captures the
 current arena as a `.mts` schematic in the world folder, and it
 immediately becomes selectable from the map dropdown.
 
-See [`README-DEV.md`](README-DEV.md) for the full technical guide
-(architecture, admin tooling reference, and contribution notes).
 
 ## Screenshots
 
