@@ -1,6 +1,6 @@
 # Lightcycles
 
-![LightCycles screenshot](screenshot.png "")
+![LightCycles game won](screenshots/game_won.png "Game won")
 
 A 3D multiplayer Tron-style lightcycle racing game for [Luanti](https://www.luanti.org/)
 (formerly Minetest). Ride a lightcycle around a glowing arena, leaving a
@@ -163,6 +163,19 @@ immediately becomes selectable from the map dropdown.
 
 See [`README-DEV.md`](README-DEV.md) for the full technical guide
 (architecture, admin tooling reference, and contribution notes).
+
+## Screenshots
+
+![LightCycles head to head](screenshots/head_to_head.png "Head to Head")
+
+![LightCycles shield breaking trail](screenshots/shield_breaking_trail.png "Shield breaking trail")
+
+![LightCycles build mode](screenshots/build_mode_.png "Build mode")
+
+![LightCycles map top](screenshots/map_top.png "Map top")
+
+![LightCycles admin menu](screenshots/menu_admin.png "Admin menu")
+
 
 ## Credits & License
 
