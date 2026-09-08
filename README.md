@@ -62,7 +62,6 @@ instant.
 You're always moving forward — there's no key to stop. Run into any wall
 (yours, someone else's, or the arena boundary) and you're derezzed.
 
-
 ### Scoring
 
 Every racer scores based on how long they lasted, not just the winner. The first player 
@@ -110,7 +109,6 @@ The score table shows each racer's name, rank in the current race, race score (i
 - RS : Race Score - points earned in the current race. Race Rank points are awarded at the end of the race.
 - GS : Game Score - sum of all Race Scores.
 
-
 ### Powerups
 
 Four kinds may appear on a given map, depending on how it's set up (an
@@ -123,6 +121,25 @@ admin can toggle each on/off from the lobby panel):
 - **Shield powerup** — lets you break straight through the next trail
   wall you hit, instead of crashing into it, consuming one charge.
 - **Ammo powerup** — grants a few shots (2 by default) for your laser.
+
+### Bots
+
+Admins can add bots to singleplayer and multiplayer games. There are three bot behaviors: passive, opportunistic, and aggressive.
+
+- **Passive** - Go straight until obstacle then turn one way. Never seeks a powerup. 
+- **Opportunistic** - Commits to the nearest powerup within a limited range (default: 10 nodes) the instant one comes into range, staying committed until it's reached, gone, or blocked.
+- **Aggresive** - Commits to the nearest powerup the instant one is spawned, staying committed until it's reached, gone, or blocked.
+
+All behaviors share the same base obstacle avoidance: look ahead along the current heading; if blocked, turn toward whichever side is clear; if both sides are safe, weigh toward whichever has more open room further out.
+
+Bots use shields automatically and use any boost charge they have, but never brake to manually charge the boost bar. Bots do not avoid laser bolts shot at them.
+
+Bots shoot under two independent conditions:
+- another cycle (player or bot) lined up dead ahead within range (an offensive opportunity to take down an opponent), or
+- a trail wall ahead with a hazard close on both the left and right (defensive opportunity to clear an escape route).
+
+The admin can choose the number of bots in a game and their behavior. Choosing "random" will assign each bot a random behavior from one of the three for the duration of the game. A bot's name shows their assigned behavior in the name: - `(p)` for passive, `(o)` for opportunistic, and `(a)` for aggressive. 
+ 
 
 ### Chat commands
 
