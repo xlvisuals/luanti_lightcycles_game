@@ -29,7 +29,7 @@ This is a full standalone **game**, not a mod you add to something else — just
    when creating a new world.
 3. Create the world (any name/seed — the game creates the default map) and play.
 
-N
+
 ## Playing
 
 Once you're in the world, everyone gets a lobby panel automatically —
