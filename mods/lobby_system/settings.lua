@@ -41,33 +41,26 @@ lobby_system.state = {
     racer_start_us = {},   -- name -> minetest.get_us_time() when they started this match
     match_number = 0,      -- how many matches have been played in the current session
     died_this_match = {},  -- name -> true, eliminated in the current/just-finished match -
+    scores = {},            -- name -> integer score, this session only - see the note above
 }
 
 lobby_system.last_match_duration = {}
 
 
-lobby_system.storage = minetest.get_mod_storage()
-
 function lobby_system.get_score(name)
-    return lobby_system.storage:get_int("score_" .. name) or 0
+    return lobby_system.state.scores[name] or 0
 end
 
 function lobby_system.add_score(name, amount)
-    local cur = lobby_system.get_score(name)
-    lobby_system.storage:set_int("score_" .. name, cur + (amount or 1))
+    lobby_system.state.scores[name] = lobby_system.get_score(name) + (amount or 1)
 end
 
 function lobby_system.reset_all_scores()
-    local stored = lobby_system.storage:to_table()
-    for key, _ in pairs(stored.fields or {}) do
-        if key:sub(1, 6) == "score_" then
-            lobby_system.storage:set_int(key, 0)
-        end
-    end
+    lobby_system.state.scores = {}
 end
 
 function lobby_system.reset_score(name)
-    lobby_system.storage:set_int("score_" .. name, 0)
+    lobby_system.state.scores[name] = nil
 end
 
 lobby_system.on_new_game_fn = nil

@@ -192,6 +192,7 @@ local function award_match_points(top_tier_names)
                 local pdata = lightcycles.racers[name]
                 if pdata then
                     pdata.race_score = pdata.race_score + points
+                    minetest.log("action", string.format("[lightcycles] Awarded %d points to '" .. name .. "'. Total: %d", points, pdata.race_score))
                 end
             end
         end
@@ -271,6 +272,7 @@ finish_match = function(top_tier_names, message)
         end
     end
 
+    minetest.log("action", string.format("[lightcycles] Match over"))
     award_match_points(top_tier_names)
     lobby_system.hud.update_all_scoreboards()
     lightcycles.hud.update_race_table()
@@ -284,6 +286,7 @@ finish_match = function(top_tier_names, message)
     end
     local game_over_message = lobby_system.check_matches_per_game_winner()
     if game_over_message then
+    	minetest.log("action", string.format("[lightcycles] Game over"))
         full_message = full_message .. "\n" .. game_over_message
     end
     local session_ended = overall_message or game_over_message

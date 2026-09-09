@@ -293,7 +293,7 @@ function lobby_system.player_died(name, message)
     lobby_system.sounds.play_eliminated(name)
 end
 
-local pending_new_game = false
+local pending_new_game = true
 
 function lobby_system.apply_pending_new_game()
     if not pending_new_game then return false end
@@ -353,7 +353,7 @@ function lobby_system.check_overall_winner()
         end
     end
     if best_name and best_score >= S.score_to_win_game then
-        local msg = best_name .. " wins the game overall with " .. best_score .. " points!"
+        local msg = best_name .. " wins the game with " .. best_score .. " points!"
         lobby_system.sounds.play_won()
         pending_new_game = true
         return msg
