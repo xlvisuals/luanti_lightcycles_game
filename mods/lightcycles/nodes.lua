@@ -15,15 +15,43 @@ end
 
 minetest.register_node("lightcycles:floor", {
     description = "Lightcycle Arena Floor",
-    tiles = { lightcycles.settings.tiles.arena_floor },
-    light_source = 4,
-    groups = { lightcycles_floor = 1, cracky = 3, not_in_creative_inventory = 1 },
+    tiles = { lightcycles.settings.tiles.arena_boundary_blue },
+    groups = { lightcycles_wall = 1, cracky = 3, not_in_creative_inventory = 1 },
     is_ground_content = false,
+    light_source = 4,
+    can_dig = function(pos, digger)
+        if not digger then return false end
+        return lightcycles.is_build_mode_on(digger:get_player_name())
+    end,
 })
 
 minetest.register_node("lightcycles:boundary", {
-    description = "Lightcycle Arena Wall",
-    tiles = { lightcycles.settings.tiles.arena_wall },
+    description = "Lightcycle Arena Boundary (blue)",
+    tiles = { lightcycles.settings.tiles.arena_boundary_blue },
+    groups = { lightcycles_wall = 1, cracky = 3, not_in_creative_inventory = 1 },
+    is_ground_content = false,
+    light_source = 4,
+    can_dig = function(pos, digger)
+        if not digger then return false end
+        return lightcycles.is_build_mode_on(digger:get_player_name())
+    end,
+})
+
+minetest.register_node("lightcycles:boundary_silver", {
+    description = "Lightcycle Arena Boundary (silver)",
+    tiles = { lightcycles.settings.tiles.arena_boundary_silver },
+    groups = { lightcycles_wall = 1, cracky = 3, not_in_creative_inventory = 1 },
+    is_ground_content = false,
+    light_source = 4,
+    can_dig = function(pos, digger)
+        if not digger then return false end
+        return lightcycles.is_build_mode_on(digger:get_player_name())
+    end,
+})
+
+minetest.register_node("lightcycles:boundary_blue", {
+    description = "Lightcycle Arena Boundary (Blue)",
+    tiles = { lightcycles.settings.tiles.arena_boundary_blue },
     groups = { lightcycles_wall = 1, cracky = 3, not_in_creative_inventory = 1 },
     is_ground_content = false,
     light_source = 4,
@@ -108,9 +136,22 @@ minetest.register_node("lightcycles:powerup_shield", {
     end,
 })
 
-minetest.register_node("lightcycles:powerup_ammo", {
-    description = "Lightcycle Ammo Powerup (spawned automatically, never placed by hand)",
-    tiles = { "lightcycles_powerup_ammo.png" },
+minetest.register_node("lightcycles:powerup_laser", {
+    description = "Lightcycle Laser Powerup (spawned automatically, never placed by hand)",
+    tiles = { "lightcycles_powerup_laser.png" },
+    walkable = false,
+    light_source = 12,
+    groups = { cracky = 3, not_in_creative_inventory = 1 },
+    is_ground_content = false,
+    can_dig = function(pos, digger)
+        if not digger then return false end
+        return lightcycles.is_build_mode_on(digger:get_player_name())
+    end,
+})
+
+minetest.register_node("lightcycles:powerup_rocket", {
+    description = "Lightcycle Rocket Powerup (spawned automatically, never placed by hand)",
+    tiles = { "lightcycles_powerup_rocket.png" },
     walkable = false,
     light_source = 12,
     groups = { cracky = 3, not_in_creative_inventory = 1 },

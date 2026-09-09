@@ -52,14 +52,32 @@ function lightcycles.sounds.play_shield_break(pos)
     }, true)
 end
 
-function lightcycles.sounds.play_ammo_pickup(pos)
-    minetest.sound_play("pickup_ammo", {
+function lightcycles.sounds.play_laser_pickup(pos)
+    minetest.sound_play("pickup_laser", {
         pos = pos, gain = S.pickup_gain, max_hear_distance = S.pickup_max_hear_distance,
     }, true)
 end
 
-function lightcycles.sounds.play_shoot(pos)
-    minetest.sound_play("shoot", {
+function lightcycles.sounds.play_rocket_pickup(pos)
+    minetest.sound_play("pickup_rocket", {
+        pos = pos, gain = S.pickup_gain, max_hear_distance = S.pickup_max_hear_distance,
+    }, true)
+end
+
+function lightcycles.sounds.play_rocket_explosion(pos)
+    minetest.sound_play("rocket_explosion", {
+        pos = pos, gain = S.pickup_gain, max_hear_distance = S.pickup_max_hear_distance,
+    }, true)
+end
+
+function lightcycles.sounds.play_shoot_laser(pos)
+    minetest.sound_play("shoot_laser", {
+        pos = pos, gain = S.pickup_gain, max_hear_distance = S.pickup_max_hear_distance,
+    }, true)
+end
+
+function lightcycles.sounds.play_shoot_rocket(pos)
+    minetest.sound_play("shoot_rocket", {
         pos = pos, gain = S.pickup_gain, max_hear_distance = S.pickup_max_hear_distance,
     }, true)
 end

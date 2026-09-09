@@ -123,7 +123,8 @@ local function find_nearest_powerup(pos, range)
     end
     consider(lightcycles.get_active_boost_powerup_pos())
     consider(lightcycles.get_active_shield_powerup_pos())
-    consider(lightcycles.get_active_ammo_powerup_pos())
+    consider(lightcycles.get_active_laser_powerup_pos())
+    consider(lightcycles.get_active_rocket_powerup_pos())
 
     return best_pos
 end
@@ -133,7 +134,8 @@ local function powerup_still_at(target)
     check.y = S.arena_center.y + 1
     local n = minetest.get_node(check).name
     return n == "lightcycles:powerup_point" or n == "lightcycles:powerup_boost"
-        or n == "lightcycles:powerup_shield" or n == "lightcycles:powerup_ammo"
+        or n == "lightcycles:powerup_shield" or n == "lightcycles:powerup_laser"
+        or n == "lightcycles:powerup_rocket"
 end
 
 local function steer_towards(pos, dir, target)
@@ -258,11 +260,16 @@ function lightcycles.bots.get_controls(pdata, pos, dir)
         controls.up = true
     end
 
-    if pdata.ammo and pdata.ammo > 0
-        and (not pdata.shot_cooldown_remaining or pdata.shot_cooldown_remaining <= 0)
+    if pdata.laser and pdata.laser > 0
+        and (not pdata.laser_cooldown_remaining or pdata.laser_cooldown_remaining <= 0)
         and (enemy_dead_ahead(pdata, pos, dir, SHOOT_HEAD_ON_RANGE)
             or boxed_in_by_wall(pos, dir, SHOOT_WALL_AHEAD_RANGE, SHOOT_TRAP_SIDE_RANGE)) then
         controls.jump = true
+    elseif pdata.rocket and pdata.rocket > 0
+        and (not pdata.rocket_cooldown_remaining or pdata.rocket_cooldown_remaining <= 0)
+        and (enemy_dead_ahead(pdata, pos, dir, SHOOT_HEAD_ON_RANGE)
+            or boxed_in_by_wall(pos, dir, SHOOT_WALL_AHEAD_RANGE, SHOOT_TRAP_SIDE_RANGE)) then
+        controls.aux1 = true
     end
 
     return controls

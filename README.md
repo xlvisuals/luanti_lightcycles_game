@@ -10,8 +10,10 @@ eliminated (derezzed).
 
 Brake or pick up a boost powerup to charge your
 boost bar for extra speed; collect shield powerups to break through a
-trail wall instead of crashing into it, and ammo powerups to fire a laser
-bolt that derezzes trails or opponents.
+trail wall instead of crashing into it; laser powerups to fire a bolt
+that derezzes trails or opponents; and rocket powerups for a slower but
+far more destructive shot that blows out a 3x3 area of trails/cycles on
+impact.
 
 This is a full standalone **game**, not a mod you add to something else — just install it and play.
 
@@ -56,8 +58,8 @@ instant.
 | **W** | Boost: extra speed while your boost bar has charge |
 | **S** | Brake: reduces speed, fills your boost bar while held |
 | **Shift** | Quick-look: peek directly behind you while held |
-| **Space** or **left-click** | Fire a shot (requires ammo) |
-| **E** | Open the lobby menu |
+| **Space** or **left-click** | Fire a laser shot (requires laser ammo) |
+| **E** (Aux key) or **right-click** | Fire a rocket (requires rocket ammo). Outside of a race, instead opens the lobby menu |
 
 You're always moving forward — there's no key to stop. Run into any wall
 (yours, someone else's, or the arena boundary) and you're derezzed.
@@ -84,8 +86,8 @@ share the same placement, and the next rank down is left vacant rather
 than shifting up to fill the gap.
 
 On top of placement, collecting a point powerup adds 3 points, and
-eliminating an opponent with a shot adds 5 — both on top of whatever
-points you get for your place at the end of a race.
+eliminating an opponent with a laser or rocket shot adds 5 — both on top
+of whatever points you get for your place at the end of a race.
 
 Scores reset each game — either when a second player joins after
 someone's been playing solo, or after a set number of races (5 by
@@ -111,7 +113,7 @@ The score table shows each racer's name, rank in the current race, race score (i
 
 ### Powerups
 
-Four kinds may appear on a given map, depending on how it's set up (an
+Five kinds may appear on a given map, depending on how it's set up (an
 admin can toggle each on/off from the lobby panel):
 
 - **Point powerup** — placed as part of the level itself, worth bonus
@@ -120,7 +122,13 @@ admin can toggle each on/off from the lobby panel):
   if not grabbed in time; instantly refills your boost bar.
 - **Shield powerup** — lets you break straight through the next trail
   wall you hit, instead of crashing into it, consuming one charge.
-- **Ammo powerup** — grants a few shots (2 by default) for your laser.
+- **Laser powerup** — grants a few shots (2 by default). A laser bolt is
+  fast and precise, destroying a single trail node or eliminating a
+  single opponent on a direct hit.
+- **Rocket powerup** — grants a rocket (1 by default). A rocket is
+  slower than a laser bolt, but on impact it destroys a 3x3 area of trail
+  walls (never the boundary or floor) and eliminates every racer caught
+  standing in that area, not just the one it directly hit.
 
 ### Bots
 
@@ -132,11 +140,13 @@ Admins can add bots to singleplayer and multiplayer games. There are three bot b
 
 All behaviors share the same base obstacle avoidance: look ahead along the current heading; if blocked, turn toward whichever side is clear; if both sides are safe, weigh toward whichever has more open room further out.
 
-Bots use shields automatically and use any boost charge they have, but never brake to manually charge the boost bar. Bots do not avoid laser bolts shot at them.
+Bots use shields automatically and use any boost charge they have, but never brake to manually charge the boost bar. Bots do not avoid laser bolts or rockets shot at them.
 
 Bots shoot under two independent conditions:
 - another cycle (player or bot) lined up dead ahead within range (an offensive opportunity to take down an opponent), or
 - a trail wall ahead with a hazard close on both the left and right (defensive opportunity to clear an escape route).
+
+When either condition is met, a bot fires its laser if it has any ammo left, and only reaches for a rocket once it's completely out of laser shots.
 
 The admin can choose the number of bots in a game and their behavior. Choosing "random" will assign each bot a random behavior from one of the three for the duration of the game. A bot's name shows their assigned behavior in the name: - `(p)` for passive, `(o)` for opportunistic, and `(a)` for aggressive. 
  
@@ -181,8 +191,8 @@ privileges and a set of tools for editing the arena:
 Place spawner and player-spawn blocks at ground level, the same height as
 the wall blocks — the powerup or player itself spawns just above the
 marker. A player spawns facing whichever direction you were facing when
-you placed their marker. Boost, shield, and ammo powerups don't need
-spawners at all — they appear at random spots on their own.
+you placed their marker. Boost, shield, laser, and rocket powerups don't
+need spawners at all — they appear at random spots on their own.
 
 Use the `giveme` command to refill any blocks you run out of or lost:
 - `/giveme lightcycles:boundary 99`

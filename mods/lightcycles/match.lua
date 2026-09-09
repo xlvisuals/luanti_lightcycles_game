@@ -41,9 +41,11 @@ local function spawn_bots(real_count)
             last_wall_pos = vector.round(sp.pos),
             cycle_obj = nil,
             engine_pitch_state = "normal",
-            ammo = starting_value(S.ammo_powerups_enabled, S.starting_ammo),
-            shot_cooldown_remaining = 0,
+            laser = starting_value(S.laser_powerups_enabled, S.starting_laser),
+            laser_cooldown_remaining = 0,
             shield = starting_value(S.shield_powerups_enabled, S.starting_shield),
+            rocket = starting_value(S.rocket_powerups_enabled, S.starting_rocket),
+            rocket_cooldown_remaining = 0,
             is_bot = true,
             bot_behavior = behavior,
             race_rank = 0,
@@ -250,7 +252,8 @@ finish_match = function(top_tier_names, message)
     end
     lightcycles.stop_boost_powerup_loop()
     lightcycles.stop_shield_powerup_loop()
-    lightcycles.stop_ammo_powerup_loop()
+    lightcycles.stop_laser_powerup_loop()
+    lightcycles.stop_rocket_powerup_loop()
     lightcycles.despawn_point_powerup_entities()
     lightcycles.clear_all_projectiles()
 
@@ -340,15 +343,15 @@ local HELP_FORMNAME = "lightcycles:help"
 local function help_formspec()
     local text = table.concat({
         "\n",
-        "Lightcycyles is a 3D multiplayer Tron-style lightcycle racing game: leave a trail (jetwall) as you drive, hit any obstacle and you get eliminated (derezzed). Brake or pick up a boost powerup to charge your boost bar for additional speed. Collect shield powerups to break through trails, and ammo powerups to derezz trails or opponents with a laser bolt.\n",
+        "Lightcycyles is a 3D multiplayer Tron-style lightcycle racing game: leave a trail (jetwall) as you drive, hit any obstacle and you get eliminated (derezzed). Brake or pick up a boost powerup to charge your boost bar for additional speed. Collect shield powerups to break through trails, laser powerups to derezz trails or opponents with a laser bolt, and rocket powerups for a slower but far more destructive shot.\n",
 		"\n",
 		"<b>Controls</b>\n",
 		"- A / D : turn 90 degrees left or right.\n",
 		"- S : brake (fills the boost bar).\n",
 		"- W : boost (spends the boost bar).\n",
 		"- Shift : quick-look behind you while held.\n",
-		"- Space or Left-click : fire a shot (requires ammo).\n",
-		"- E : Open lobby menu.\n",
+		"- Space or Left-click : fire a laser shot (requires laser).\n",
+		"- E (Aux key) or Right-click : fire a rocket (requires rocket) while racing. Outside of a race, E instead reopens the lobby menu.\n",
 		"\n",
 		"<b>Scoring</b>\n",
 		"Every racer scores points based on where they finished: \n",
@@ -362,7 +365,7 @@ local function help_formspec()
 		"- 8th place : " .. S.placement_points[8] .. "\n",
 		"A round with no survivors doesn't award 1st place to anyone, since nobody actually won. Racers that are eliminated simultaneously occupy the same rank, and the next rank down is vacant.\n",
 		"Collecting a point powerup awards " .. S.point_powerup_value .. " additional points.\n",
-        "Eliminating an opponent with a shot awards " .. S.kill_by_shot_points .. " additional points.\n",
+        "Eliminating an opponent with a shot (laser or rocket) awards " .. S.kill_by_shot_points .. " additional points.\n",
         "\n",
 		"<b>Score table</b>\n",
         "The score table shows each racer's name, rank in the current race, race score (including awarded points), and overall game score: \n",
@@ -375,7 +378,9 @@ local function help_formspec()
 		"- Point powerup : collect it for " .. S.point_powerup_value .. " extra points. Does not respawn.\n",
 		"- Boost powerup : instantly fills your boost bar.\n",
 		"- Shield powerup : lets you break through one trail wall.\n",
-		"- Ammo powerup : grants " .. S.ammo_per_pickup .. " shots. \n",
+		"- Laser powerup : grants " .. S.laser_per_pickup .. " shots. \n",
+		"- Rocket powerup : grants " .. S.rocket_per_pickup .. " rockets. \n",
+		" A rocket is slower than a laser, but destroys a 3x3 area on impact instead of a single block, and eliminates anyone else caught in the blast too.\n",
 		"\n",
 		"<b>Player chat commands</b>\n",
 		"- /lc or /lc menu : opens the lobby panel\n",
@@ -399,7 +404,7 @@ local function help_formspec()
 		"- point-powerup spawner : place to spawn a point powerup above it.\n",
 		"- 8 numbered player-spawn markers : place to spawn a player above it.\n",
 		"Place point/player spawners on the ground level - same height as wall blocks, the point powerups and players will spawn above the spawner. Players spawn facing the direction you faced when placing the player spawner.\n",
-		"Other powerups (shield, ammo, boost) appear randomly on the map and don't require spawners.\n",
+		"Other powerups (shield, laser, rocket, boost) appear randomly on the map and don't require spawners.\n",
 		"Once you're happy with a layout, return to the lobby ('E') and press 'Save Map' to save the nap under a new name. This captures the current arena as a .mts schematic in the world folder. You can then select the map from the map dropdown immediately.\n",
 		"\n"
         }, "")
@@ -533,8 +538,11 @@ lobby_system.register_game({
         if S.shield_powerups_enabled then
             lightcycles.start_shield_powerup_loop(this_generation)
         end
-        if S.ammo_powerups_enabled then
-            lightcycles.start_ammo_powerup_loop(this_generation)
+        if S.laser_powerups_enabled then
+            lightcycles.start_laser_powerup_loop(this_generation)
+        end
+        if S.rocket_powerups_enabled then
+            lightcycles.start_rocket_powerup_loop(this_generation)
         end
 
         spawn_bots(count)
@@ -565,9 +573,11 @@ lobby_system.register_game({
             last_wall_pos = vector.round(pos),
             cycle_obj = nil,
             engine_pitch_state = "normal",
-            ammo = starting_value(S.ammo_powerups_enabled, S.starting_ammo),
-            shot_cooldown_remaining = 0,
+            laser = starting_value(S.laser_powerups_enabled, S.starting_laser),
+            laser_cooldown_remaining = 0,
             shield = starting_value(S.shield_powerups_enabled, S.starting_shield),
+            rocket = starting_value(S.rocket_powerups_enabled, S.starting_rocket),
+            rocket_cooldown_remaining = 0,
             race_rank = 0,
             race_score = 0,
         }
@@ -583,8 +593,9 @@ lobby_system.register_game({
             if lightcycles.boost_hidden then
                 lightcycles.hud.set_boost_visible(player, false)
             end
-            lightcycles.hud.update_ammo(player, pdata.ammo)
+            lightcycles.hud.update_laser(player, pdata.laser)
             lightcycles.hud.update_shield(player, pdata.shield)
+            lightcycles.hud.update_rocket(player, pdata.rocket)
             lightcycles.hud.update_boost_bar(player, pdata.boost)
 
             if pdata.cycle_obj then
@@ -662,18 +673,22 @@ lobby_system.register_game({
 
             local shield_label = S.shield_powerups_enabled
                 and "Shield Powerups: ON" or "Shield Powerups: off"
-            local ammo_label = S.ammo_powerups_enabled
-                and "Ammo Powerups: ON" or "Ammo Powerups: off"
+            local laser_label = S.laser_powerups_enabled
+                and "Laser Powerups: ON" or "Laser Powerups: off"
             table.insert(fs, "button[0.4,7.3;3.75,0.8;lc_shield_powerups_toggle;" ..
                 minetest.formspec_escape(shield_label) .. "]")
-            table.insert(fs, "button[4.35,7.3;3.75,0.8;lc_ammo_powerups_toggle;" ..
-                minetest.formspec_escape(ammo_label) .. "]")
+            table.insert(fs, "button[4.35,7.3;3.75,0.8;lc_laser_powerups_toggle;" ..
+                minetest.formspec_escape(laser_label) .. "]")
 
             local walls_label = S.remove_walls_on_eliminate
                 and "On derez: ERASE trails"
                 or "On derez: KEEP trails"
             table.insert(fs, "button[0.4,8.2;3.75,0.8;lc_walls_toggle;" ..
                 minetest.formspec_escape(walls_label) .. "]")
+            local rocket_label = S.rocket_powerups_enabled
+                and "Rocket Powerups: ON" or "Rocket Powerups: off"
+            table.insert(fs, "button[4.35,8.2;3.75,0.8;lc_rocket_powerups_toggle;" ..
+                minetest.formspec_escape(rocket_label) .. "]")
 
             table.insert(fs, "label[0.4,9.45;Bots:]")
             table.insert(fs, "dropdown[1.25,9.15;1.5,0.7;lc_bot_count;0,1,2,3,4,5,6,7;" ..
@@ -709,11 +724,13 @@ lobby_system.register_game({
 
             table.insert(fs, "label[0.4,7.35;Shield Powerups: "
                 .. (S.shield_powerups_enabled and "ON" or "off") .. "]")
-            table.insert(fs, "label[4.35,7.35;Ammo Powerups: "
-                .. (S.ammo_powerups_enabled and "ON" or "off") .. "]")
+            table.insert(fs, "label[4.35,7.35;Laser Powerups: "
+                .. (S.laser_powerups_enabled and "ON" or "off") .. "]")
 
             table.insert(fs, "label[0.4,8.15;On derez: "
                 .. (S.remove_walls_on_eliminate and "ERASE trails" or "KEEP trails") .. "]")
+            table.insert(fs, "label[4.35,8.15;Rocket Powerups: "
+                .. (S.rocket_powerups_enabled and "ON" or "off") .. "]")
 
             table.insert(fs, "label[0.4,8.95;Bots: " .. S.bot_count .. "]")
             if S.bot_count > 0 then
@@ -797,14 +814,25 @@ lobby_system.register_game({
                 lobby_system.gui.refresh_all()
             end
             return true
-        elseif fields.lc_ammo_powerups_toggle then
+        elseif fields.lc_laser_powerups_toggle then
             if is_admin then
-                S.ammo_powerups_enabled = not S.ammo_powerups_enabled
-                if not S.ammo_powerups_enabled then
-                    lightcycles.clear_active_ammo_powerup()
+                S.laser_powerups_enabled = not S.laser_powerups_enabled
+                if not S.laser_powerups_enabled then
+                    lightcycles.clear_active_laser_powerup()
                 end
-                minetest.chat_send_all("[Lightcycles] " .. name .. " turned ammo powerups "
-                    .. (S.ammo_powerups_enabled and "ON" or "off") .. ".")
+                minetest.chat_send_all("[Lightcycles] " .. name .. " turned laser powerups "
+                    .. (S.laser_powerups_enabled and "ON" or "off") .. ".")
+                lobby_system.gui.refresh_all()
+            end
+            return true
+        elseif fields.lc_rocket_powerups_toggle then
+            if is_admin then
+                S.rocket_powerups_enabled = not S.rocket_powerups_enabled
+                if not S.rocket_powerups_enabled then
+                    lightcycles.clear_active_rocket_powerup()
+                end
+                minetest.chat_send_all("[Lightcycles] " .. name .. " turned rocket powerups "
+                    .. (S.rocket_powerups_enabled and "ON" or "off") .. ".")
                 lobby_system.gui.refresh_all()
             end
             return true

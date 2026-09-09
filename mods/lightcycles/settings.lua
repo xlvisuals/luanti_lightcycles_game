@@ -5,7 +5,7 @@ math.randomseed(os.time())
 
 lightcycles.settings = {
 
-    title                         = "Lightcycles v1.0.2",
+    title                         = "Lightcycles v1.0.3",
 
     arena_center                  = { x = 0, y = 50, z = 0 }, -- built well above ground, self-contained
     arena_size                    = 101,                      -- floor is arena_size x arena_size (101x101) - needs to be uneven for fair distances
@@ -36,8 +36,8 @@ lightcycles.settings = {
     },
 
     tiles                     = {
-        arena_floor = "lightcycles_tile_blue.png",  -- floor tile
-        arena_wall  = "lightcycles_tile_blue.png",  -- wall tile
+        arena_boundary_silver = "lightcycles_tile_silver.png",
+        arena_boundary_blue  = "lightcycles_tile_blue.png",
     },
 
     cycle_attach_offset       = { x = -5, y = 6, z = 5 },
@@ -88,22 +88,30 @@ lightcycles.settings = {
     point_powerups_enabled    = true,
     boost_powerups_enabled    = true,
     shield_powerups_enabled   = true,
-    ammo_powerups_enabled     = true,
+    laser_powerups_enabled    = true,
+    rocket_powerups_enabled   = true,
     point_powerup_value       = 3,  -- bonus match points awarded on pickup
     boost_powerup_interval    = 10, -- seconds between boost powerup spawn attempts
     boost_powerup_lifetime    = 20, -- seconds a spawned boost powerup lasts before vanishing unclaimed
     shield_powerup_interval   = 20, -- seconds between shield powerup spawn attempts (rarer than boost - see design note in powerups.lua)
     shield_powerup_lifetime   = 20, -- seconds a spawned shield powerup lasts before vanishing unclaimed
-    ammo_powerup_interval     = 20, -- seconds between ammo powerup spawn attempts
-    ammo_powerup_lifetime     = 20, -- seconds a spawned ammo powerup lasts before vanishing unclaimed
-    ammo_per_pickup           = 2,  -- shots granted per ammo powerup collected
+    laser_powerup_interval     = 20, -- seconds between laser powerup spawn attempts
+    laser_powerup_lifetime     = 20, -- seconds a spawned laser powerup lasts before vanishing unclaimed
+    laser_per_pickup           = 2,  -- shots granted per laser powerup collected
+    rocket_powerup_interval    = 20, -- seconds between rocket powerup spawn attempts
+    rocket_powerup_lifetime    = 20, -- seconds a spawned rocket powerup lasts before vanishing unclaimed
+    rocket_per_pickup          = 1,  -- shots granted per rocket powerup collected
 
-    shot_speed_multiplier     = 3,   -- laser bolt speed, as a multiple of base_speed
-    shot_cooldown             = 0.5, -- minimum seconds between shots, per racer
-    shot_lifetime             = 6,   -- seconds a bolt travels before despawning unclaimed (comfortably longer than crossing the whole arena)
-    kill_by_shot_points       = 5,   -- bonus match points for eliminating another racer with a shot (on top of their own placement points)
+    laser_speed_multiplier     = 4,   -- laser bolt speed, as a multiple of base_speed
+    laser_cooldown             = 0.5, -- minimum seconds between laser shots, per racer
+    laser_lifetime             = 6,   -- seconds a bolt travels before despawning unclaimed (comfortably longer than crossing the whole arena)
+    rocket_speed_multiplier    = 2,   -- rocket speed, as a multiple of base_speed
+    rocket_cooldown            = 2,   -- minimum seconds between rocket, per racer
+    rocket_lifetime            = 6,   -- seconds a rocket travels before despawning unclaimed (comfortably longer than crossing the whole arena)
+    kill_by_shot_points        = 5,   -- bonus match points for eliminating another racer with a laser or rocket shot (on top of their own placement points)
 
-    starting_ammo             = 1, -- shots
+    starting_laser            = 1, -- shots
+    starting_rocket           = 1, -- shots
     starting_shield           = 1, -- charges (each one breaks through one trail wall)
     starting_boost            = 30, -- bar charge, 0-100
 

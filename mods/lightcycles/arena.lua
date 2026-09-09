@@ -58,7 +58,7 @@ local function build_arena_now()
 
     for x = b.min_x - apron, b.max_x + apron do
         for z = b.min_z - apron, b.max_z + apron do
-            minetest.set_node({ x = x, y = b.y0, z = z }, { name = "lightcycles:floor" })
+            minetest.set_node({ x = x, y = b.y0, z = z }, { name = "lightcycles:boundary" })
         end
     end
 

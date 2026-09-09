@@ -120,16 +120,22 @@ local boost_powerup = make_random_powerup("lightcycles:powerup_boost",
     "boost_powerups_enabled", "boost_powerup_interval", "boost_powerup_lifetime")
 local shield_powerup = make_random_powerup("lightcycles:powerup_shield",
     "shield_powerups_enabled", "shield_powerup_interval", "shield_powerup_lifetime")
-local ammo_powerup = make_random_powerup("lightcycles:powerup_ammo",
-    "ammo_powerups_enabled", "ammo_powerup_interval", "ammo_powerup_lifetime")
+local laser_powerup = make_random_powerup("lightcycles:powerup_laser",
+    "laser_powerups_enabled", "laser_powerup_interval", "laser_powerup_lifetime")
+local rocket_powerup = make_random_powerup("lightcycles:powerup_rocket",
+    "rocket_powerups_enabled", "rocket_powerup_interval", "rocket_powerup_lifetime")
 
 function lightcycles.clear_active_boost_powerup() boost_powerup.clear_active() end
 function lightcycles.start_boost_powerup_loop(generation) boost_powerup.start_loop(generation) end
 function lightcycles.stop_boost_powerup_loop() boost_powerup.stop_loop() end
 
-function lightcycles.clear_active_ammo_powerup() ammo_powerup.clear_active() end
-function lightcycles.start_ammo_powerup_loop(generation) ammo_powerup.start_loop(generation) end
-function lightcycles.stop_ammo_powerup_loop() ammo_powerup.stop_loop() end
+function lightcycles.clear_active_laser_powerup() laser_powerup.clear_active() end
+function lightcycles.start_laser_powerup_loop(generation) laser_powerup.start_loop(generation) end
+function lightcycles.stop_laser_powerup_loop() laser_powerup.stop_loop() end
+
+function lightcycles.clear_active_rocket_powerup() rocket_powerup.clear_active() end
+function lightcycles.start_rocket_powerup_loop(generation) rocket_powerup.start_loop(generation) end
+function lightcycles.stop_rocket_powerup_loop() rocket_powerup.stop_loop() end
 
 
 function lightcycles.get_active_point_powerup_positions()
@@ -148,8 +154,12 @@ function lightcycles.get_active_shield_powerup_pos()
     return shield_powerup.get_active_pos()
 end
 
-function lightcycles.get_active_ammo_powerup_pos()
-    return ammo_powerup.get_active_pos()
+function lightcycles.get_active_laser_powerup_pos()
+    return laser_powerup.get_active_pos()
+end
+
+function lightcycles.get_active_rocket_powerup_pos()
+    return rocket_powerup.get_active_pos()
 end
 
 function lightcycles.clear_active_shield_powerup() shield_powerup.clear_active() end
@@ -202,12 +212,21 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
         minetest.chat_send_all("[Lightcycles] " .. name .. " picked up a shield (" .. pdata.shield .. " now).")
     end
 
-    if S.ammo_powerups_enabled and node.name == "lightcycles:powerup_ammo" then
+    if S.laser_powerups_enabled and node.name == "lightcycles:powerup_laser" then
         minetest.set_node(rounded, { name = "air" })
-        ammo_powerup.clear_active()
-        pdata.ammo = (pdata.ammo or 0) + S.ammo_per_pickup
-        lightcycles.hud.update_ammo(minetest.get_player_by_name(name), pdata.ammo)
-        lightcycles.sounds.play_ammo_pickup(rounded)
-        minetest.chat_send_all("[Lightcycles] " .. name .. " picked up ammo (" .. pdata.ammo .. " now).")
+        laser_powerup.clear_active()
+        pdata.laser = (pdata.laser or 0) + S.laser_per_pickup
+        lightcycles.hud.update_laser(minetest.get_player_by_name(name), pdata.laser)
+        lightcycles.sounds.play_laser_pickup(rounded)
+        minetest.chat_send_all("[Lightcycles] " .. name .. " picked up laser (" .. pdata.laser .. " now).")
+    end
+
+    if S.rocket_powerups_enabled and node.name == "lightcycles:powerup_rocket" then
+        minetest.set_node(rounded, { name = "air" })
+        rocket_powerup.clear_active()
+        pdata.rocket = (pdata.rocket or 0) + S.rocket_per_pickup
+        lightcycles.hud.update_rocket(minetest.get_player_by_name(name), pdata.rocket)
+        lightcycles.sounds.play_rocket_pickup(rounded)
+        minetest.chat_send_all("[Lightcycles] " .. name .. " picked up rocket (" .. pdata.rocket .. " now).")
     end
 end

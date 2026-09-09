@@ -275,11 +275,13 @@ function lightcycles.hud.add_boost_bar(player)
         })
     end
 
+    local SLOT_SPACING = 70
+    local BADGE_OFFSET = 18
     if not ids.shield_icon then
         ids.shield_icon = player:hud_add({
             type = "image",
             position = { x = 0.5, y = 1 },
-            offset = { x = 35 * scale, y = -60 * scale },
+            offset = { x = -SLOT_SPACING * scale, y = -60 * scale },
             alignment = { x = 0, y = 0 },
             text = "", -- empty = invisible until at least one shield is held
             scale = { x = 3 * scale, y = 3 * scale },
@@ -289,7 +291,7 @@ function lightcycles.hud.add_boost_bar(player)
         ids.shield_count = player:hud_add({
             type = "text",
             position = { x = 0.5, y = 1 },
-            offset = { x = 53 * scale, y = -42 * scale },
+            offset = { x = (-SLOT_SPACING + BADGE_OFFSET) * scale, y = -42 * scale },
             alignment = { x = -1, y = 1 },
             number = 0xFFFFFF,
             text = "",
@@ -297,21 +299,43 @@ function lightcycles.hud.add_boost_bar(player)
             size = { x = 1.1 * scale, y = 1.1 * scale },
         })
     end
-    if not ids.ammo_icon then
-        ids.ammo_icon = player:hud_add({
+    if not ids.laser_icon then
+        ids.laser_icon = player:hud_add({
             type = "image",
             position = { x = 0.5, y = 1 },
-            offset = { x = -35 * scale, y = -60 * scale },
+            offset = { x = 0, y = -60 * scale },
             alignment = { x = 0, y = 0 },
             text = "", -- empty = invisible until at least one shot is held
             scale = { x = 3 * scale, y = 3 * scale },
         })
     end
-    if not ids.ammo_count then
-        ids.ammo_count = player:hud_add({
+    if not ids.laser_count then
+        ids.laser_count = player:hud_add({
             type = "text",
             position = { x = 0.5, y = 1 },
-            offset = { x = -17 * scale, y = -42 * scale },
+            offset = { x = BADGE_OFFSET * scale, y = -42 * scale },
+            alignment = { x = -1, y = 1 },
+            number = 0xFFFFFF,
+            text = "",
+            scale = { x = 100, y = 100 },
+            size = { x = 1.1 * scale, y = 1.1 * scale },
+        })
+    end
+    if not ids.rocket_icon then
+        ids.rocket_icon = player:hud_add({
+            type = "image",
+            position = { x = 0.5, y = 1 },
+            offset = { x = SLOT_SPACING * scale, y = -60 * scale },
+            alignment = { x = 0, y = 0 },
+            text = "", -- empty = invisible until at least one rocket is held
+            scale = { x = 3 * scale, y = 3 * scale },
+        })
+    end
+    if not ids.rocket_count then
+        ids.rocket_count = player:hud_add({
+            type = "text",
+            position = { x = 0.5, y = 1 },
+            offset = { x = (SLOT_SPACING + BADGE_OFFSET) * scale, y = -42 * scale },
             alignment = { x = -1, y = 1 },
             number = 0xFFFFFF,
             text = "",
@@ -321,6 +345,7 @@ function lightcycles.hud.add_boost_bar(player)
     end
     local flags = player:hud_get_flags()
     flags.hotbar = false
+    flags.healthbar = false
     player:hud_set_flags(flags)
 end
 
@@ -355,17 +380,31 @@ function lightcycles.hud.update_shield(player, count)
     end
 end
 
-function lightcycles.hud.update_ammo(player, count)
+function lightcycles.hud.update_laser(player, count)
     if not player then return end
     local name = player:get_player_name()
     local ids = ids_for(name)
-    if not ids.ammo_icon or not ids.ammo_count then return end
+    if not ids.laser_icon or not ids.laser_count then return end
     if count and count > 0 then
-        player:hud_change(ids.ammo_icon, "text", "lightcycles_powerup_ammo.png")
-        player:hud_change(ids.ammo_count, "text", count >= 2 and ("x" .. count) or "")
+        player:hud_change(ids.laser_icon, "text", "lightcycles_powerup_laser.png")
+        player:hud_change(ids.laser_count, "text", count >= 2 and ("x" .. count) or "")
     else
-        player:hud_change(ids.ammo_icon, "text", "")
-        player:hud_change(ids.ammo_count, "text", "")
+        player:hud_change(ids.laser_icon, "text", "")
+        player:hud_change(ids.laser_count, "text", "")
+    end
+end
+
+function lightcycles.hud.update_rocket(player, count)
+    if not player then return end
+    local name = player:get_player_name()
+    local ids = ids_for(name)
+    if not ids.rocket_icon or not ids.rocket_count then return end
+    if count and count > 0 then
+        player:hud_change(ids.rocket_icon, "text", "lightcycles_powerup_rocket.png")
+        player:hud_change(ids.rocket_count, "text", count >= 2 and ("x" .. count) or "")
+    else
+        player:hud_change(ids.rocket_icon, "text", "")
+        player:hud_change(ids.rocket_count, "text", "")
     end
 end
 
@@ -386,16 +425,25 @@ function lightcycles.hud.remove_boost_bar(player)
         player:hud_remove(ids.shield_count)
         ids.shield_count = nil
     end
-    if ids.ammo_icon then
-        player:hud_remove(ids.ammo_icon)
-        ids.ammo_icon = nil
+    if ids.laser_icon then
+        player:hud_remove(ids.laser_icon)
+        ids.laser_icon = nil
     end
-    if ids.ammo_count then
-        player:hud_remove(ids.ammo_count)
-        ids.ammo_count = nil
+    if ids.laser_count then
+        player:hud_remove(ids.laser_count)
+        ids.laser_count = nil
+    end
+    if ids.rocket_icon then
+        player:hud_remove(ids.rocket_icon)
+        ids.rocket_icon = nil
+    end
+    if ids.rocket_count then
+        player:hud_remove(ids.rocket_count)
+        ids.rocket_count = nil
     end
     local flags = player:hud_get_flags()
     flags.hotbar = true
+    flags.healthbar = true
     player:hud_set_flags(flags)
 end
 

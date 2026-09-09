@@ -101,18 +101,32 @@ minetest.register_globalstep(function(dtime)
                 local pos = obj:get_pos()
                 pos.y = S.arena_center.y + 1
 
-                if pdata.shot_cooldown_remaining and pdata.shot_cooldown_remaining > 0 then
-                    pdata.shot_cooldown_remaining = pdata.shot_cooldown_remaining - dtime
+                if pdata.laser_cooldown_remaining and pdata.laser_cooldown_remaining > 0 then
+                    pdata.laser_cooldown_remaining = pdata.laser_cooldown_remaining - dtime
                 end
-                if (controls.dig or controls.jump) and pdata.ammo and pdata.ammo > 0
-                    and (not pdata.shot_cooldown_remaining or pdata.shot_cooldown_remaining <= 0) then
-                    pdata.ammo = pdata.ammo - 1
-                    pdata.shot_cooldown_remaining = S.shot_cooldown
-                    lightcycles.fire_shot(name, pos, pdata.yaw)
+                if (controls.dig or controls.jump) and pdata.laser and pdata.laser > 0
+                    and (not pdata.laser_cooldown_remaining or pdata.laser_cooldown_remaining <= 0) then
+                    pdata.laser = pdata.laser - 1
+                    pdata.laser_cooldown_remaining = S.laser_cooldown
+                    lightcycles.fire_laser(name, pos, pdata.yaw)
                     if player then
-                        lightcycles.hud.update_ammo(player, pdata.ammo)
+                        lightcycles.hud.update_laser(player, pdata.laser)
                     end
-                    minetest.chat_send_all("[Lightcycles] " .. name .. " fired a shot! (" .. pdata.ammo .. " left)")
+                    minetest.chat_send_all("[Lightcycles] " .. name .. " fired a shot! (" .. pdata.laser .. " left)")
+                end
+
+                if pdata.rocket_cooldown_remaining and pdata.rocket_cooldown_remaining > 0 then
+                    pdata.rocket_cooldown_remaining = pdata.rocket_cooldown_remaining - dtime
+                end
+                if (controls.aux1 or controls.place) and pdata.rocket and pdata.rocket > 0
+                    and (not pdata.rocket_cooldown_remaining or pdata.rocket_cooldown_remaining <= 0) then
+                    pdata.rocket = pdata.rocket - 1
+                    pdata.rocket_cooldown_remaining = S.rocket_cooldown
+                    lightcycles.fire_rocket(name, pos, pdata.yaw)
+                    if player then
+                        lightcycles.hud.update_rocket(player, pdata.rocket)
+                    end
+                    minetest.chat_send_all("[Lightcycles] " .. name .. " fired a rocket! (" .. pdata.rocket .. " left)")
                 end
 
                 local ahead = vector.add(pos, vector.multiply(dir, S.trail_check_ahead))
