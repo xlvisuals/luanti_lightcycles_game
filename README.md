@@ -35,7 +35,37 @@ Alternatively, you can simply download a .zip of this and copy it's content into
 2. Go to **Start Game**, and pick **LightCycles** as the game
 3. When running for the first time, click **New** to create a world (any name/seed — the game creates the default map)
 4. Click **Play Game**
-   - If you want to host a server, check **Host Server** on below `Start Game`
+   - If you want to host a server, check **Host Server** below the `Start Game` tab, then click **Host Game**.
+
+
+## Multiplayer
+
+Lightcycles is meant to be played with other people, but it also works
+fine solo against the time or against bots.
+
+### Playing alone with your own player name
+
+If you launch a world by clicking "Play Game", Luanti starts the game in 
+Singleplayer mode, In this mode Luanti hardcodes your player name to 
+`singleplayer` — this is an engine-level reservation.
+
+To play solo under your own name instead, check the "Host Server" 
+checkbox on the left and leave **Announce Server** unchecked.
+That allows you to set a player name in the Name field. The 
+"Play Game" button becomes "Host Game", but you're only hosting for yourself.
+### Hosting for others
+
+Same **Host Server** checkbox as above, but now:
+
+- **Announce Server** — turn this on to list your game on Luanti's
+  public server list, or leave it off and just share your IP/port with
+  friends directly (e.g. over a LAN or a VPN).
+- Anyone connecting picks their own player name on their own end when
+  they join, the same as any other Luanti server.
+- The player who started the server automatically becomes the admin and 
+  can configure the game and edit maps. Players that join remotely can 
+  only join and leave a game and start it, but cannot change settings.
+  To make someone else an admin too, run `/grant <name> lobby_admin`.
 
 
 ## Playing
