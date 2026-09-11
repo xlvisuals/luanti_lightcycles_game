@@ -149,7 +149,9 @@ function lightcycles.ensure_map_loaded(on_done)
     end
     local key = lightcycles.current_map_key()
     if not key then
-        minetest.log("error", "[lightcycles] ensure_map_loaded: no valid .mts files found in schems/")
+        minetest.log("info", "[lightcycles] No valid .mts files found in schems/. Building default arena.")
+        lightcycles.build_arena(on_done)
+	
         if on_done then on_done() end
         return
     end

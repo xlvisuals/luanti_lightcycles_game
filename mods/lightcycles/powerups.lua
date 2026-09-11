@@ -57,40 +57,55 @@ local function random_open_position()
     return nil -- arena too full of trails to find a spot this attempt; skip this cycle
 end
 
-local function make_random_powerup(node_name, enabled_key, interval_key, lifetime_key)
-    local active = nil -- { pos = {x=,y=,z=} } or nil
+local function make_random_powerup(node_name, enabled_key, interval_key, lifetime_key, max_key)
+    local active = {} -- list of { pos = {x=,y=,z=}, expiry_job = <job> }
     local spawn_loop_job = nil -- job handle for the currently-scheduled next spawn attempt
-    local expiry_job = nil     -- job handle for the currently-active powerup's vanish timer
 
-    local function clear_active()
-        if expiry_job then expiry_job:cancel(); expiry_job = nil end
-        if active then
-            if minetest.get_node(active.pos).name == node_name then
-                minetest.set_node(active.pos, { name = "air" })
+    local function remove_instance(index)
+        local inst = active[index]
+        if not inst then return end
+        if inst.expiry_job then inst.expiry_job:cancel() end
+        if minetest.get_node(inst.pos).name == node_name then
+            minetest.set_node(inst.pos, { name = "air" })
+        end
+        table.remove(active, index)
+    end
+
+    local function remove_at(pos)
+        for i, inst in ipairs(active) do
+            if vector.equals(inst.pos, pos) then
+                remove_instance(i)
+                return
             end
-            active = nil
+        end
+    end
+
+    local function clear_all()
+        for i = #active, 1, -1 do
+            remove_instance(i)
         end
     end
 
     local function spawn(generation)
         if lightcycles.match_generation ~= generation then return end
         if not S[enabled_key] or lobby_system.state.phase ~= "playing" then return end
-        clear_active() -- shouldn't normally still be one, but just in case
+        if #active >= S[max_key] then return end -- already at the cap for this type - skip this spawn event
         local pos = random_open_position()
         if pos then
             minetest.set_node(pos, { name = node_name })
-            active = { pos = pos }
+            local inst = { pos = pos }
+            table.insert(active, inst)
             lightcycles.powerup_spawn_generation = lightcycles.powerup_spawn_generation + 1
-            expiry_job = minetest.after(S[lifetime_key], function()
+            inst.expiry_job = minetest.after(S[lifetime_key], function()
                 if lightcycles.match_generation == generation and lobby_system.state.phase == "playing" then
-                    clear_active()
+                    remove_at(inst.pos)
                 end
             end)
         end
     end
 
     local function start_loop(generation)
-        active = nil
+        active = {}
         if spawn_loop_job then spawn_loop_job:cancel(); spawn_loop_job = nil end -- defensive, shouldn't normally still be one
         local function tick()
             if lightcycles.match_generation ~= generation then return end
@@ -103,27 +118,32 @@ local function make_random_powerup(node_name, enabled_key, interval_key, lifetim
 
     local function stop_loop()
         if spawn_loop_job then spawn_loop_job:cancel(); spawn_loop_job = nil end
-        clear_active()
+        clear_all()
     end
 
-    local function get_active_pos()
-        return active and { x = active.pos.x, y = active.pos.y, z = active.pos.z } or nil
+    local function get_active_positions()
+        local copy = {}
+        for _, inst in ipairs(active) do
+            table.insert(copy, { x = inst.pos.x, y = inst.pos.y, z = inst.pos.z })
+        end
+        return copy
     end
 
     return {
-        clear_active = clear_active, start_loop = start_loop, stop_loop = stop_loop,
-        get_active_pos = get_active_pos,
+        clear_active = clear_all, remove_at = remove_at,
+        start_loop = start_loop, stop_loop = stop_loop,
+        get_active_positions = get_active_positions,
     }
 end
 
 local boost_powerup = make_random_powerup("lightcycles:powerup_boost",
-    "boost_powerups_enabled", "boost_powerup_interval", "boost_powerup_lifetime")
+    "boost_powerups_enabled", "boost_powerup_interval", "boost_powerup_lifetime", "boost_powerup_max")
 local shield_powerup = make_random_powerup("lightcycles:powerup_shield",
-    "shield_powerups_enabled", "shield_powerup_interval", "shield_powerup_lifetime")
+    "shield_powerups_enabled", "shield_powerup_interval", "shield_powerup_lifetime", "shield_powerup_max")
 local laser_powerup = make_random_powerup("lightcycles:powerup_laser",
-    "laser_powerups_enabled", "laser_powerup_interval", "laser_powerup_lifetime")
+    "laser_powerups_enabled", "laser_powerup_interval", "laser_powerup_lifetime", "laser_powerup_max")
 local rocket_powerup = make_random_powerup("lightcycles:powerup_rocket",
-    "rocket_powerups_enabled", "rocket_powerup_interval", "rocket_powerup_lifetime")
+    "rocket_powerups_enabled", "rocket_powerup_interval", "rocket_powerup_lifetime", "rocket_powerup_max")
 
 function lightcycles.clear_active_boost_powerup() boost_powerup.clear_active() end
 function lightcycles.start_boost_powerup_loop(generation) boost_powerup.start_loop(generation) end
@@ -146,20 +166,20 @@ function lightcycles.get_active_point_powerup_positions()
     return copy
 end
 
-function lightcycles.get_active_boost_powerup_pos()
-    return boost_powerup.get_active_pos()
+function lightcycles.get_active_boost_powerup_positions()
+    return boost_powerup.get_active_positions()
 end
 
-function lightcycles.get_active_shield_powerup_pos()
-    return shield_powerup.get_active_pos()
+function lightcycles.get_active_shield_powerup_positions()
+    return shield_powerup.get_active_positions()
 end
 
-function lightcycles.get_active_laser_powerup_pos()
-    return laser_powerup.get_active_pos()
+function lightcycles.get_active_laser_powerup_positions()
+    return laser_powerup.get_active_positions()
 end
 
-function lightcycles.get_active_rocket_powerup_pos()
-    return rocket_powerup.get_active_pos()
+function lightcycles.get_active_rocket_powerup_positions()
+    return rocket_powerup.get_active_positions()
 end
 
 function lightcycles.clear_active_shield_powerup() shield_powerup.clear_active() end
@@ -189,7 +209,7 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
         minetest.chat_send_all("[Lightcycles] " .. name .. " picked up +" .. S.point_powerup_value .. " points!")
 
         local racer_count = 0
-        for _ in pairs(lightcycles.racers) do racer_count = racer_count + 1 end
+        for _ in pairs(lightcycles.players) do racer_count = racer_count + 1 end
         if racer_count == 1 and had_point_powerups_this_match and #active_point_powerups == 0 then
             lightcycles.end_match(name)
         end
@@ -197,7 +217,7 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
 
     if S.boost_powerups_enabled and node.name == "lightcycles:powerup_boost" then
         minetest.set_node(rounded, { name = "air" })
-        boost_powerup.clear_active()
+        boost_powerup.remove_at(rounded)
         pdata.boost = 100
         lightcycles.sounds.play_boost_pickup(rounded)
         minetest.chat_send_all("[Lightcycles] " .. name .. " picked up a boost powerup!")
@@ -205,7 +225,7 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
 
     if S.shield_powerups_enabled and node.name == "lightcycles:powerup_shield" then
         minetest.set_node(rounded, { name = "air" })
-        shield_powerup.clear_active()
+        shield_powerup.remove_at(rounded)
         pdata.shield = (pdata.shield or 0) + 1
         lightcycles.hud.update_shield(minetest.get_player_by_name(name), pdata.shield)
         lightcycles.sounds.play_shield_pickup(rounded)
@@ -214,7 +234,7 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
 
     if S.laser_powerups_enabled and node.name == "lightcycles:powerup_laser" then
         minetest.set_node(rounded, { name = "air" })
-        laser_powerup.clear_active()
+        laser_powerup.remove_at(rounded)
         pdata.laser = (pdata.laser or 0) + S.laser_per_pickup
         lightcycles.hud.update_laser(minetest.get_player_by_name(name), pdata.laser)
         lightcycles.sounds.play_laser_pickup(rounded)
@@ -223,7 +243,7 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
 
     if S.rocket_powerups_enabled and node.name == "lightcycles:powerup_rocket" then
         minetest.set_node(rounded, { name = "air" })
-        rocket_powerup.clear_active()
+        rocket_powerup.remove_at(rounded)
         pdata.rocket = (pdata.rocket or 0) + S.rocket_per_pickup
         lightcycles.hud.update_rocket(minetest.get_player_by_name(name), pdata.rocket)
         lightcycles.sounds.play_rocket_pickup(rounded)

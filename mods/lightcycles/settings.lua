@@ -5,7 +5,7 @@ math.randomseed(os.time())
 
 lightcycles.settings = {
 
-    title                         = "Lightcycles v1.0.3",
+    title                         = "Lightcycles v1.0.4",
 
     arena_center                  = { x = 0, y = 50, z = 0 }, -- built well above ground, self-contained
     arena_size                    = 101,                      -- floor is arena_size x arena_size (101x101) - needs to be uneven for fair distances
@@ -40,9 +40,15 @@ lightcycles.settings = {
         arena_boundary_blue  = "lightcycles_tile_blue.png",
     },
 
-    cycle_attach_offset       = { x = -5, y = 6, z = 5 },
+    cycle_visual_size           = { x = 0.8, y = 1.0, z = 1.0 },
 
-    cycle_eye_height          = 1.0,
+    laser_visual_size          = { x = 0.2, y = 0.2, z = 1 }, -- elongated along its direction of travel
+    rocket_visual_size         = { x = 0.2, y = 0.2, z = 1 }, -- elongated along its direction of travel
+
+    cycle_attach_offset         = { x = 0, y = 0, z = 0 },
+    player_attach_offset       = { x = 0, y = 0.4, z = 0 },
+
+    player_eye_height          = 1.0,
 
     base_speed                = 6,    -- nodes/second, normal cruising speed
     boost_delta               = 0.30, -- +/-30% speed while boosting, or while braking with the bar not yet full - applied instantly on press/release, same as a turn
@@ -82,6 +88,16 @@ lightcycles.settings = {
         min_size = 0.8,
         max_size = 2.2,
     },
+    
+    rocket_blast_effect       = {
+        amount = 40,
+        time = 0.2,
+        speed = 4,
+        min_lifetime = 0.3,
+        max_lifetime = 0.8,
+        min_size = 1.0,
+        max_size = 2.5,
+    },
 
     placement_points             = { 25, 18, 15, 12, 10, 8, 6, 4, 2, 1 },
 
@@ -92,18 +108,22 @@ lightcycles.settings = {
     rocket_powerups_enabled   = true,
     point_powerup_value       = 3,  -- bonus match points awarded on pickup
     boost_powerup_interval    = 10, -- seconds between boost powerup spawn attempts
-    boost_powerup_lifetime    = 20, -- seconds a spawned boost powerup lasts before vanishing unclaimed
-    shield_powerup_interval   = 20, -- seconds between shield powerup spawn attempts (rarer than boost - see design note in powerups.lua)
-    shield_powerup_lifetime   = 20, -- seconds a spawned shield powerup lasts before vanishing unclaimed
-    laser_powerup_interval     = 20, -- seconds between laser powerup spawn attempts
-    laser_powerup_lifetime     = 20, -- seconds a spawned laser powerup lasts before vanishing unclaimed
+    boost_powerup_lifetime    = 25, -- seconds a spawned boost powerup lasts before vanishing unclaimed
+    boost_powerup_max          = 3,  -- max unclaimed boost powerups on the arena at once - a spawn attempt is skipped (not queued or delayed) if the arena's already at this many, so lowering the interval is always safe from clutter
+    shield_powerup_interval    = 10, -- seconds between shield powerup spawn attempts (rarer than boost - see design note in powerups.lua)
+    shield_powerup_lifetime    = 25, -- seconds a spawned shield powerup lasts before vanishing unclaimed
+    shield_powerup_max         = 3,  -- see boost_powerup_max above
+    laser_powerup_interval     = 11, -- seconds between laser powerup spawn attempts
+    laser_powerup_lifetime     = 25, -- seconds a spawned laser powerup lasts before vanishing unclaimed
+    laser_powerup_max          = 3,  -- see boost_powerup_max above
     laser_per_pickup           = 2,  -- shots granted per laser powerup collected
-    rocket_powerup_interval    = 20, -- seconds between rocket powerup spawn attempts
-    rocket_powerup_lifetime    = 20, -- seconds a spawned rocket powerup lasts before vanishing unclaimed
+    rocket_powerup_interval    = 12, -- seconds between rocket powerup spawn attempts
+    rocket_powerup_lifetime    = 25, -- seconds a spawned rocket powerup lasts before vanishing unclaimed
+    rocket_powerup_max         = 3,  -- see boost_powerup_max above
     rocket_per_pickup          = 1,  -- shots granted per rocket powerup collected
 
     laser_speed_multiplier     = 4,   -- laser bolt speed, as a multiple of base_speed
-    laser_cooldown             = 0.5, -- minimum seconds between laser shots, per racer
+    laser_cooldown             = 1, -- minimum seconds between laser shots, per racer
     laser_lifetime             = 6,   -- seconds a bolt travels before despawning unclaimed (comfortably longer than crossing the whole arena)
     rocket_speed_multiplier    = 2,   -- rocket speed, as a multiple of base_speed
     rocket_cooldown            = 2,   -- minimum seconds between rocket, per racer
@@ -125,6 +145,6 @@ lightcycles.settings = {
     build_tool_range          = 10,
 }
 
-lightcycles.racers = {}
+lightcycles.players = {}
 
 lightcycles.storage = minetest.get_mod_storage()

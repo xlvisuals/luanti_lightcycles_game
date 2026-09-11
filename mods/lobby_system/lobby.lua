@@ -112,7 +112,7 @@ function lobby_system.lobby.join(name)
             minetest.chat_send_player(name, "This match is full (" .. S.max_players .. " max).")
             return
         end
-        lobby_system.lobby.start_one_racer(name, state.next_index)
+        lobby_system.lobby.start_one_player(name, state.next_index)
         state.next_index = state.next_index + 1
         local msg = format_message("joined_game", name, { index = state.next_index - 1 })
         minetest.chat_send_all(msg)
@@ -176,7 +176,7 @@ function lobby_system.lobby.start(caller_name)
     for n, _ in pairs(state.lobby) do lobby_snapshot[n] = true end
     state.phase = "countdown"
     state.countdown_left = S.countdown_seconds
-    state.racers = {}
+    state.players = {}
     state.next_index = 1
     lobby_system.apply_pending_new_game()
     state.match_number = state.match_number + 1
@@ -189,7 +189,7 @@ function lobby_system.lobby.start(caller_name)
 
     local i = 1
     for name, _ in pairs(lobby_snapshot) do
-        lobby_system.lobby.start_one_racer(name, i)
+        lobby_system.lobby.start_one_player(name, i)
         i = i + 1
     end
     state.next_index = count + 1
@@ -227,9 +227,9 @@ function lobby_system.lobby.start_with_confirmation(caller_name)
     return lobby_system.lobby.start(caller_name)
 end
 
-function lobby_system.lobby.start_one_racer(name, index)
+function lobby_system.lobby.start_one_player(name, index)
     local g = game()
-    state.racers[name] = true
+    state.players[name] = true
     state.racer_start_us[name] = minetest.get_us_time()
 
     local pos, yaw = idle_pos_and_yaw()
@@ -266,7 +266,7 @@ function lobby_system.lobby.run_countdown(n)
     minetest.chat_send_all("Starting in " .. n .. "...")
 
     if n == S.late_join_cutoff then
-        lobby_system.gui.refresh_non_racers()
+        lobby_system.gui.refresh_non_players()
     end
 
     minetest.after(1, function() lobby_system.lobby.run_countdown(n - 1) end)
@@ -377,7 +377,7 @@ end
 
 function lobby_system.game_over()
     local g = game()
-    for name, _ in pairs(state.racers) do
+    for name, _ in pairs(state.players) do
         if g and g.on_match_end then
             g.on_match_end(name)
         end
@@ -393,7 +393,7 @@ function lobby_system.game_over()
             lobby_system.sounds.start_lobby_loop(player)
         end
     end
-    state.racers = {}
+    state.players = {}
     state.next_index = 1
     state.phase = "lobby"
     state.died_this_match = {}
@@ -416,7 +416,7 @@ end
 
 minetest.register_on_leaveplayer(function(player)
     local name = player:get_player_name()
-    local was_racing = state.racers[name] and true or false
+    local was_racing = state.players[name] and true or false
     local was_in_lobby = state.lobby[name] and true or false
 
     if was_in_lobby then
@@ -459,14 +459,14 @@ minetest.register_on_joinplayer(function(player)
     player:set_pos(pos)
     player:set_look_horizontal(yaw)
 
-    if not state.racers[name] then
+    if not state.players[name] then
         lobby_system.sounds.start_lobby_loop(player)
         lobby_system.gui.show(name)
     end
 
     minetest.after(0.5, function()
         local p = minetest.get_player_by_name(name)
-        if p and p:is_player() and not state.racers[name] then
+        if p and p:is_player() and not state.players[name] then
             lobby_system.hide_player_body(p)
             lobby_system.hide_nametag(p)
         end
@@ -477,7 +477,7 @@ local last_aux1 = {}
 minetest.register_globalstep(function(dtime)
     for _, player in ipairs(minetest.get_connected_players()) do
         local name = player:get_player_name()
-        if not state.racers[name] then
+        if not state.players[name] then
             local controls = player:get_player_control()
             if controls.aux1 and not last_aux1[name] then
                 lobby_system.gui.show(name)

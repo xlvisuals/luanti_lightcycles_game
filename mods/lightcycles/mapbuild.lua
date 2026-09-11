@@ -72,7 +72,7 @@ function lightcycles.set_build_mode(name, on)
     flags.crosshair = on
     player:hud_set_flags(flags)
 
-    if not lightcycles.racers[name] then
+    if not lightcycles.players[name] then
         if on then
             player:set_physics_override({
                 speed = 1, jump = 1, gravity = 0, sneak = true, sneak_glitch = false,

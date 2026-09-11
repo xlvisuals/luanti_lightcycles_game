@@ -12,10 +12,14 @@ local function wall_pos_at(pos)
     return { x = pos.x, y = S.arena_center.y + 1, z = pos.z }
 end
 
-local function snap_to_grid(obj)
+local function snap_to_grid(obj, offset)
     local pos = obj:get_pos()
     if pos then
-        obj:set_pos(vector.round(pos))
+        local rounded = vector.round(pos)
+        if offset then
+            rounded = vector.add(rounded, offset)
+        end
+        obj:set_pos(rounded)
     end
 end
 
@@ -27,7 +31,7 @@ minetest.register_globalstep(function(dtime)
 
     local cycle_collision_handled = {}
 
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         if lobby_system.state.phase ~= "playing" or not pdata.racing then break end
 
         if pdata.alive and pdata.cycle_obj then
@@ -43,15 +47,17 @@ minetest.register_globalstep(function(dtime)
                     controls = player:get_player_control()
                 end
 
+		local offset = lightcycles.settings.cycle_attach_offset
+                local turned = false
                 if controls.left and not pdata.was_left then
                     pdata.yaw = pdata.yaw + HALF_PI
-                    if player then player:set_look_horizontal(pdata.yaw) end
-                    snap_to_grid(obj)
+                    snap_to_grid(obj, offset)
+                    turned = true
                 end
                 if controls.right and not pdata.was_right then
                     pdata.yaw = pdata.yaw - HALF_PI
-                    if player then player:set_look_horizontal(pdata.yaw) end
-                    snap_to_grid(obj)
+                    snap_to_grid(obj, offset)
+                    turned = true
                 end
                 pdata.was_left = controls.left
                 pdata.was_right = controls.right
@@ -60,7 +66,7 @@ minetest.register_globalstep(function(dtime)
                 if player then
                     if controls.sneak then
                         player:set_look_horizontal(pdata.yaw + math.pi)
-                    elseif pdata.was_sneak then
+                    elseif turned or pdata.was_sneak then
                         player:set_look_horizontal(pdata.yaw)
                     end
                 end
@@ -165,7 +171,7 @@ minetest.register_globalstep(function(dtime)
 
                 local is_cycle_collision = false
                 if not cycle_collision_handled[name] then
-                    for other_name, other_pdata in pairs(lightcycles.racers) do
+                    for other_name, other_pdata in pairs(lightcycles.players) do
                         if other_name ~= name and other_pdata.alive and other_pdata.cycle_obj
                             and not cycle_collision_handled[other_name] then
                             local other_pos = other_pdata.cycle_obj:get_pos()

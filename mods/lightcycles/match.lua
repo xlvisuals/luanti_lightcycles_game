@@ -51,7 +51,7 @@ local function spawn_bots(real_count)
             race_rank = 0,
             race_score = 0,
         }
-        lightcycles.racers[bot_name] = pdata
+        lightcycles.players[bot_name] = pdata
         alive_count = alive_count + 1
 
         pdata.cycle_obj = lightcycles.spawn_bot_cycle(bot_name, color, sp.pos, sp.yaw)
@@ -67,18 +67,18 @@ local function spawn_bots(real_count)
 end
 
 local function despawn_all_bots()
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         if pdata.is_bot then
             lightcycles.sounds.stop_engine_loop(name)
             lightcycles.despawn_cycle(nil, pdata)
-            lightcycles.racers[name] = nil
+            lightcycles.players[name] = nil
         end
     end
 end
 
 
 local function mark_eliminated(name, custom_message)
-    local pdata = lightcycles.racers[name]
+    local pdata = lightcycles.players[name]
     if not pdata or not pdata.alive then return end
 
     pdata.alive = false
@@ -113,7 +113,7 @@ local function finalize_decision()
     local alive_now = 0
     local still_alive = {}
     local human_alive = false
-    for n, p in pairs(lightcycles.racers) do
+    for n, p in pairs(lightcycles.players) do
         if p.alive then
             alive_now = alive_now + 1
             winner = n
@@ -131,7 +131,7 @@ local function finalize_decision()
 end
 
 local function any_human_alive()
-    for n, p in pairs(lightcycles.racers) do
+    for n, p in pairs(lightcycles.players) do
         if p.alive and not p.is_bot then return true end
     end
     return false
@@ -146,7 +146,7 @@ end
 
 local function assign_race_rank(names)
     for _, name in ipairs(names) do
-        local pdata = lightcycles.racers[name]
+        local pdata = lightcycles.players[name]
         if pdata and pdata.alive then
             pdata.race_rank = alive_count
         end
@@ -172,9 +172,9 @@ function lightcycles.eliminate_batch(names)
 end
 
 
-local function count_racers()
+local function count_players()
     local n = 0
-    for _ in pairs(lightcycles.racers) do n = n + 1 end
+    for _ in pairs(lightcycles.players) do n = n + 1 end
     return n
 end
 
@@ -191,7 +191,7 @@ local function award_match_points(top_tier_names)
         for _, name in ipairs(names) do
             if points > 0 then
                 lobby_system.add_score(name, points)
-                local pdata = lightcycles.racers[name]
+                local pdata = lightcycles.players[name]
                 if pdata then
                     pdata.race_score = pdata.race_score + points
                     minetest.log("action", string.format("[lightcycles] Awarded %d points to '" .. name .. "'. Total: %d", points, pdata.race_score))
@@ -228,7 +228,7 @@ lobby_system.set_match_counter_suffix(function()
 end)
 
 lobby_system.set_scoreboard_filter_fn(function(name)
-    return lobby_system.state.lobby[name] or lobby_system.state.racers[name] or false
+    return lobby_system.state.lobby[name] or lobby_system.state.players[name] or false
 end)
 
 local timeout_job = nil
@@ -257,7 +257,7 @@ finish_match = function(top_tier_names, message)
     lightcycles.despawn_point_powerup_entities()
     lightcycles.clear_all_projectiles()
 
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         pdata.racing = false -- stops movement.lua's globalstep touching them further
         if pdata.cycle_obj then
             pdata.cycle_obj:set_velocity({ x = 0, y = 0, z = 0 })
@@ -270,7 +270,7 @@ finish_match = function(top_tier_names, message)
 
     if top_tier_names then
         for _, name in ipairs(top_tier_names) do
-            local pdata = lightcycles.racers[name]
+            local pdata = lightcycles.players[name]
             if pdata then pdata.race_rank = 1 end
         end
     end
@@ -315,7 +315,7 @@ function lightcycles.end_match(winner)
     local top_tier
     if winner then
         top_tier = { winner }
-    elseif count_racers() > 1 then
+    elseif count_players() > 1 then
         top_tier = {}
     end -- else: solo draw, top_tier stays nil - no placement scoring
 
@@ -326,11 +326,11 @@ end
 
 function lightcycles.end_match_timeout()
     local still_alive = {}
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         if pdata.alive then table.insert(still_alive, name) end
     end
 
-    if count_racers() <= 1 then
+    if count_players() <= 1 then
         finish_match(nil, "Time's up! No survivors bonus for a solo run.")
     else
         finish_match(still_alive, "Time's up! " .. #still_alive .. " rider"
@@ -352,6 +352,7 @@ local function help_formspec()
 		"- Shift : quick-look behind you while held.\n",
 		"- Space or Left-click : fire a laser shot (requires laser).\n",
 		"- E (Aux key) or Right-click : fire a rocket (requires rocket) while racing. Outside of a race, E instead reopens the lobby menu.\n",
+		"- C : change camera view.\n",
 		"\n",
 		"<b>Scoring</b>\n",
 		"Every racer scores points based on where they finished: \n",
@@ -581,7 +582,7 @@ lobby_system.register_game({
             race_rank = 0,
             race_score = 0,
         }
-        lightcycles.racers[name] = pdata
+        lightcycles.players[name] = pdata
         alive_count = alive_count + 1
 
         if player then
@@ -611,14 +612,14 @@ lobby_system.register_game({
     end,
 
     on_match_end = function(name)
-        local pdata = lightcycles.racers[name]
+        local pdata = lightcycles.players[name]
         local player = minetest.get_player_by_name(name)
         lightcycles.sounds.stop_engine_loop(name)
         lightcycles.despawn_cycle(player, pdata)
         if player then
             lightcycles.hud.remove_boost_bar(player)
         end
-        lightcycles.racers[name] = nil
+        lightcycles.players[name] = nil
     end,
 
     on_racing_ended = function()
@@ -909,8 +910,8 @@ lobby_system.set_new_game_on_second_player(true)
 
 minetest.register_on_leaveplayer(function(player)
     local name = player:get_player_name()
-    if lightcycles.racers[name] and lightcycles.racers[name].alive then
+    if lightcycles.players[name] and lightcycles.players[name].alive then
         lightcycles.eliminate(name)
     end
-    lightcycles.racers[name] = nil
+    lightcycles.players[name] = nil
 end)

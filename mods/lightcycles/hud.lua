@@ -23,7 +23,7 @@ end
 
 local function race_table_rows()
     local rows = {}
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         table.insert(rows, {
             name = name,
             rank = pdata.race_rank,
@@ -207,7 +207,7 @@ function lightcycles.hud.set_boost_visible(player, visible)
     local ids = ids_for(name)
     if visible then
         lightcycles.hud.add_boost_bar(player)
-        local pdata = lightcycles.racers[name]
+        local pdata = lightcycles.players[name]
         if pdata then
             lightcycles.hud.update_boost_bar(player, pdata.boost)
         end

@@ -7,7 +7,7 @@ local ALL_BEHAVIORS = { "passive", "opportunistic", "aggressive" }
 
 lobby_system.set_extra_known_names_fn(function()
     local names = {}
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         if pdata.is_bot then table.insert(names, name) end
     end
     return names
@@ -121,10 +121,18 @@ local function find_nearest_powerup(pos, range)
     for _, p in ipairs(lightcycles.get_active_point_powerup_positions()) do
         consider(p)
     end
-    consider(lightcycles.get_active_boost_powerup_pos())
-    consider(lightcycles.get_active_shield_powerup_pos())
-    consider(lightcycles.get_active_laser_powerup_pos())
-    consider(lightcycles.get_active_rocket_powerup_pos())
+    for _, p in ipairs(lightcycles.get_active_boost_powerup_positions()) do
+        consider(p)
+    end
+    for _, p in ipairs(lightcycles.get_active_shield_powerup_positions()) do
+        consider(p)
+    end
+    for _, p in ipairs(lightcycles.get_active_laser_powerup_positions()) do
+        consider(p)
+    end
+    for _, p in ipairs(lightcycles.get_active_rocket_powerup_positions()) do
+        consider(p)
+    end
 
     return best_pos
 end
@@ -209,7 +217,7 @@ local function decide_aggressive(pdata, pos, dir)
 end
 
 local function enemy_dead_ahead(self_pdata, pos, dir, range)
-    for _, other_pdata in pairs(lightcycles.racers) do
+    for _, other_pdata in pairs(lightcycles.players) do
         if other_pdata ~= self_pdata and other_pdata.alive and other_pdata.cycle_obj then
             local other_pos = other_pdata.cycle_obj:get_pos()
             if other_pos then

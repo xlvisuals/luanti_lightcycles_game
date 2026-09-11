@@ -3,7 +3,7 @@ local last_aux1 = {} -- name -> bool, for edge-detecting the cycle key
 
 local function alive_names_sorted()
     local list = {}
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         if pdata.alive then table.insert(list, name) end
     end
     table.sort(list)
@@ -30,7 +30,7 @@ end
 minetest.register_globalstep(function(dtime)
     if lobby_system.state.phase ~= "playing" then return end
 
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         if pdata.mode == "spectating" then
             local player = minetest.get_player_by_name(name)
             if player and player:is_player() then
@@ -43,7 +43,7 @@ minetest.register_globalstep(function(dtime)
                 local target_name = spectate_target(pdata)
                 if target_name then
                     local target = minetest.get_player_by_name(target_name)
-                    local tdata = lightcycles.racers[target_name]
+                    local tdata = lightcycles.players[target_name]
                     if target and tdata and tdata.cycle_obj and tdata.cycle_obj:get_pos() then
                         local dir = minetest.yaw_to_dir(tdata.yaw)
                         local tpos = tdata.cycle_obj:get_pos()
@@ -55,7 +55,7 @@ minetest.register_globalstep(function(dtime)
                             "DEREZZED - watching " .. target_name .. " (press E to switch)")
                     end
                 else
-                    lobby_system.hud.set_status(player, "DEREZZED - no racers left to watch")
+                    lobby_system.hud.set_status(player, "DEREZZED - no players left to watch")
                 end
             end
         end

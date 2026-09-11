@@ -12,7 +12,7 @@ end
 minetest.register_entity("lightcycles:cycle", {
     initial_properties = {
         visual = "cube",
-        visual_size = { x = 0.6, y = 1.0, z = 1.0 },
+        visual_size = lightcycles.settings.cycle_visual_size,
         textures = face_textures("red"),
         collisionbox = { -0.45, -0.25, -0.65, 0.45, 0.25, 0.65 },
         physical = false, -- no engine collision - we do our own node-based checks
@@ -33,12 +33,12 @@ function lightcycles.spawn_cycle(player, pdata, color, pos, yaw)
     if not obj then return nil end
     obj:set_properties({ textures = face_textures(color) })
     obj:set_yaw(yaw)
-    local off = lightcycles.settings.cycle_attach_offset
-    player:set_attach(obj, "", { x = off.x, y = off.y, z = off.z }, { x = 0, y = 0, z = 0 })
+    local player_off = lightcycles.settings.player_attach_offset
+    player:set_attach(obj, "", { x = player_off.x, y = player_off.y, z = player_off.z }, { x = 0, y = 0, z = 0 })
     player:set_eye_offset({ x = 0, y = 0, z = 0 }, { x = 0, y = 0, z = 0 })
 
     pdata.saved_eye_height = player:get_properties().eye_height
-    player:set_properties({ eye_height = lightcycles.settings.cycle_eye_height })
+    player:set_properties({ eye_height = lightcycles.settings.player_eye_height })
 
     lobby_system.hide_player_body(player)
     if not lightcycles.names_hidden then
@@ -92,6 +92,27 @@ function lightcycles.spawn_crash_effect(pos, color)
         maxsize = S.max_size,
         texture = "lightcycles_wall_" .. color .. "_side.png",
         glow = 12,
+        collisiondetection = false,
+    })
+end
+
+function lightcycles.spawn_rocket_blast_effect(pos)
+    local S = lightcycles.settings.rocket_blast_effect
+    minetest.add_particlespawner({
+        amount = S.amount,
+        time = S.time,
+        minpos = vector.add(pos, { x = -0.4, y = -0.1, z = -0.4 }),
+        maxpos = vector.add(pos, { x = 0.4, y = 0.6, z = 0.4 }),
+        minvel = { x = -S.speed, y = S.speed * 0.5, z = -S.speed },
+        maxvel = { x = S.speed, y = S.speed, z = S.speed },
+        minacc = { x = 0, y = -9, z = 0 },
+        maxacc = { x = 0, y = -9, z = 0 },
+        minexptime = S.min_lifetime,
+        maxexptime = S.max_lifetime,
+        minsize = S.min_size,
+        maxsize = S.max_size,
+        texture = "lightcycles_rocket_projectile.png^[colorize:orange:180",
+        glow = 14,
         collisiondetection = false,
     })
 end

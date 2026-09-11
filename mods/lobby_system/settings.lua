@@ -34,7 +34,7 @@ lobby_system.settings = {
 lobby_system.state = {
     phase = "lobby",       -- "lobby" | "countdown" | "playing" | "ended"
     lobby = {},            -- name -> true, players waiting to play
-    racers = {},           -- name -> true, players in the current/forming match
+    players = {},           -- name -> true, players in the current/forming match
     countdown_left = 0,
     next_index = 1,        -- next unused spawn/slot index, for late joins
     game = nil,             -- the currently registered game's config table
@@ -122,7 +122,7 @@ function lobby_system.all_known_players()
         end
     end
     for n, _ in pairs(lobby_system.state.lobby) do add(n) end
-    for n, _ in pairs(lobby_system.state.racers) do add(n) end
+    for n, _ in pairs(lobby_system.state.players) do add(n) end
     for _, p in ipairs(minetest.get_connected_players()) do add(p:get_player_name()) end
     if lobby_system.extra_known_names_fn then
         for _, n in ipairs(lobby_system.extra_known_names_fn() or {}) do add(n) end

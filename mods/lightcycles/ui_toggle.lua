@@ -4,7 +4,7 @@ lightcycles.boost_hidden = false
 
 local function set_boost_hidden(hidden)
     lightcycles.boost_hidden = hidden
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         if pdata.alive and not pdata.is_bot then
             local player = minetest.get_player_by_name(name)
             if player then
@@ -16,7 +16,7 @@ end
 
 local function set_names_hidden(hidden)
     lightcycles.names_hidden = hidden
-    for name, pdata in pairs(lightcycles.racers) do
+    for name, pdata in pairs(lightcycles.players) do
         if pdata.alive then
             if pdata.is_bot then
                 if pdata.cycle_obj then

@@ -95,10 +95,10 @@ function lobby_system.gui.on_match_start(racer_names)
     end
 end
 
-function lobby_system.gui.refresh_non_racers()
+function lobby_system.gui.refresh_non_players()
     for _, player in ipairs(minetest.get_connected_players()) do
         local pname = player:get_player_name()
-        if not lobby_system.state.racers[pname] then
+        if not lobby_system.state.players[pname] then
             lobby_system.gui.show(pname)
         end
     end
@@ -152,7 +152,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
     if fields.ls_join then
         lobby_system.lobby.join(name)
-        if lobby_system.state.racers[name] then
+        if lobby_system.state.players[name] then
             minetest.close_formspec(name, FORMNAME)
         else
             lobby_system.gui.show(name)

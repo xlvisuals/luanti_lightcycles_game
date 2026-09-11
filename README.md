@@ -90,6 +90,7 @@ instant.
 | **Shift** | Quick-look: peek directly behind you while held |
 | **Space** or **left-click** | Fire a laser shot (requires laser ammo) |
 | **E** (Aux key) or **right-click** | Fire a rocket (requires rocket ammo). Outside of a race, instead opens the lobby menu |
+| **C** | Change camera view |
 
 You're always moving forward — there's no key to stop. Run into any wall
 (yours, someone else's, or the arena boundary) and you're derezzed.
