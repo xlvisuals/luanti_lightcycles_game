@@ -5,7 +5,7 @@ math.randomseed(os.time())
 
 lightcycles.settings = {
 
-    title                         = "Lightcycles v1.0.4",
+    title                         = "Lightcycles v1.0.5",
 
     arena_center                  = { x = 0, y = 50, z = 0 }, -- built well above ground, self-contained
     arena_size                    = 101,                      -- floor is arena_size x arena_size (101x101) - needs to be uneven for fair distances
@@ -50,6 +50,8 @@ lightcycles.settings = {
 
     player_eye_height          = 1.0,
 
+
+
     base_speed                = 6,    -- nodes/second, normal cruising speed
     boost_delta               = 0.30, -- +/-30% speed while boosting, or while braking with the bar not yet full - applied instantly on press/release, same as a turn
     boost_full_delta          = 0.15, -- +/-15% speed while braking with a full bar
@@ -88,7 +90,7 @@ lightcycles.settings = {
         min_size = 0.8,
         max_size = 2.2,
     },
-    
+
     rocket_blast_effect       = {
         amount = 40,
         time = 0.2,
@@ -97,6 +99,16 @@ lightcycles.settings = {
         max_lifetime = 0.8,
         min_size = 1.0,
         max_size = 2.5,
+    },
+
+    shield_block_effect       = {
+        amount = 24,
+        time = 0.15,
+        speed = 3,
+        min_lifetime = 0.2,
+        max_lifetime = 0.5,
+        min_size = 0.5,
+        max_size = 1.4,
     },
 
     placement_points             = { 25, 18, 15, 12, 10, 8, 6, 4, 2, 1 },

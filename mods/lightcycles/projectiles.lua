@@ -5,6 +5,17 @@ lightcycles.projectiles = {} -- { { obj=, shooter_name=, spawn_us=, kind="laser"
 
 local HIT_RADIUS = 0.6
 
+local function try_shield_block(name, hit_pos)
+    local pdata = lightcycles.players[name]
+    if not pdata or not pdata.shield or pdata.shield <= 0 then return false end
+    pdata.shield = pdata.shield - 1
+    lightcycles.hud.update_shield(minetest.get_player_by_name(name), pdata.shield)
+    lightcycles.sounds.play_shield_break(hit_pos)
+    lightcycles.spawn_shield_block_effect(hit_pos)
+    minetest.chat_send_all("[Lightcycles] " .. name .. "'s shield absorbed a hit! (" .. pdata.shield .. " left)")
+    return true
+end
+
 minetest.register_entity("lightcycles:laser_bolt", {
     initial_properties = {
         visual = "cube",
@@ -125,15 +136,22 @@ local function explode_rocket(center, shooter_name)
                     if cpos then
                         local rp = vector.round(cpos)
                         if rp.x == p.x and rp.z == p.z then
-                            local shooter_pdata = lightcycles.players[shooter_name]
-                            if shooter_pdata and shooter_pdata.alive then
-                                lobby_system.add_score(shooter_name, S.kill_by_shot_points)
-                                shooter_pdata.race_score = shooter_pdata.race_score + S.kill_by_shot_points
-                                lobby_system.hud.update_all_scoreboards()
-                                lightcycles.hud.update_race_table()
+                            if not try_shield_block(rname, p) then
+                                if rname == shooter_name then
+                                    lightcycles.eliminate(rname, rname
+                                        .. " was derezzed by their own rocket blast!")
+                                else
+                                    local shooter_pdata = lightcycles.players[shooter_name]
+                                    if shooter_pdata and shooter_pdata.alive then
+                                        lobby_system.add_score(shooter_name, S.kill_by_shot_points)
+                                        shooter_pdata.race_score = shooter_pdata.race_score + S.kill_by_shot_points
+                                        lobby_system.hud.update_all_scoreboards()
+                                        lightcycles.hud.update_race_table()
+                                    end
+                                    lightcycles.eliminate(rname, rname .. " was derezzed by " .. shooter_name
+                                        .. "'s rocket! (+" .. S.kill_by_shot_points .. " for " .. shooter_name .. ")")
+                                end
                             end
-                            lightcycles.eliminate(rname, rname .. " was derezzed by " .. shooter_name
-                                .. "'s rocket! (+" .. S.kill_by_shot_points .. " for " .. shooter_name .. ")")
                         end
                     end
                 end
@@ -184,20 +202,23 @@ minetest.register_globalstep(function(dtime)
             end
 
             if hit_name then
+                local hit_pos = hit_pdata and hit_pdata.cycle_obj and hit_pdata.cycle_obj:get_pos()
+                local rounded_hit_pos = vector.round(hit_pos or pos)
                 if p.kind == "rocket" then
                     local hit_pdata = lightcycles.players[hit_name]
-                    local hit_pos = hit_pdata and hit_pdata.cycle_obj and hit_pdata.cycle_obj:get_pos()
-                    explode_rocket(vector.round(hit_pos or pos), p.shooter_name)
+                    explode_rocket(vector.round(rounded_hit_pos), p.shooter_name)
                 else
-                    local shooter_pdata = lightcycles.players[p.shooter_name]
-                    if shooter_pdata and shooter_pdata.alive then
-                        lobby_system.add_score(p.shooter_name, S.kill_by_shot_points)
-                        shooter_pdata.race_score = shooter_pdata.race_score + S.kill_by_shot_points
-                        lobby_system.hud.update_all_scoreboards()
-                        lightcycles.hud.update_race_table()
+                    if not try_shield_block(hit_name, rounded_hit_pos) then
+                        local shooter_pdata = lightcycles.players[p.shooter_name]
+                        if shooter_pdata and shooter_pdata.alive then
+                            lobby_system.add_score(p.shooter_name, S.kill_by_shot_points)
+                            shooter_pdata.race_score = shooter_pdata.race_score + S.kill_by_shot_points
+                            lobby_system.hud.update_all_scoreboards()
+                            lightcycles.hud.update_race_table()
+                        end
+                        lightcycles.eliminate(hit_name, hit_name .. " was derezzed by " .. p.shooter_name
+                            .. "'s laser! (+" .. S.kill_by_shot_points .. " for " .. p.shooter_name .. ")")
                     end
-                    lightcycles.eliminate(hit_name, hit_name .. " was derezzed by " .. p.shooter_name
-                        .. "'s laser! (+" .. S.kill_by_shot_points .. " for " .. p.shooter_name .. ")")
                 end
                 remove_this = true
             else
@@ -219,20 +240,17 @@ minetest.register_globalstep(function(dtime)
                     end
                     remove_this = true
                 elseif is_hazard then
-		    if p.kind == "rocket" then
+                    if p.kind == "rocket" then
                         explode_rocket(rounded, p.shooter_name)
-		    end
+                    end
                     remove_this = true
-		end
-
+                end
             end
 
             local lifetime = p.kind == "rocket" and S.rocket_lifetime or S.laser_lifetime
             if not remove_this and (minetest.get_us_time() - p.spawn_us) / 1000000 > lifetime then
                 remove_this = true -- traveled long enough without hitting anything - give up on it
             end
-
-
         end
 
         if remove_this then

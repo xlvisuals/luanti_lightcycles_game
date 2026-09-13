@@ -116,3 +116,24 @@ function lightcycles.spawn_rocket_blast_effect(pos)
         collisiondetection = false,
     })
 end
+
+function lightcycles.spawn_shield_block_effect(pos)
+    local S = lightcycles.settings.shield_block_effect
+    minetest.add_particlespawner({
+        amount = S.amount,
+        time = S.time,
+        minpos = vector.add(pos, { x = -0.3, y = -0.1, z = -0.3 }),
+        maxpos = vector.add(pos, { x = 0.3, y = 0.5, z = 0.3 }),
+        minvel = { x = -S.speed, y = S.speed * 0.4, z = -S.speed },
+        maxvel = { x = S.speed, y = S.speed, z = S.speed },
+        minacc = { x = 0, y = -9, z = 0 },
+        maxacc = { x = 0, y = -9, z = 0 },
+        minexptime = S.min_lifetime,
+        maxexptime = S.max_lifetime,
+        minsize = S.min_size,
+        maxsize = S.max_size,
+        texture = "lightcycles_powerup_shield.png^[colorize:#90EE90:180",
+        glow = 14,
+        collisiondetection = false,
+    })
+end
