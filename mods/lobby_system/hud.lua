@@ -70,7 +70,12 @@ local function match_counter_text()
     if match_counter_hidden then return nil end
     local progress = lobby_system.get_match_progress()
     if not progress.total then return nil end
-    local text = "Race: " .. progress.current .. "/" .. progress.total
+    local text
+    if progress.total <= 1 then
+        text = "Race"
+    else
+        text = "Race: " .. progress.current .. "/" .. progress.total
+    end
     if lobby_system.match_counter_suffix_fn then
         local suffix = lobby_system.match_counter_suffix_fn()
         if suffix then

@@ -54,7 +54,7 @@ local function random_open_position()
             return pos
         end
     end
-    return nil -- arena too full of trails to find a spot this attempt; skip this cycle
+    return nil -- arena too full of trails to find a spot this attempt; skip this tank
 end
 
 local function make_random_powerup(node_name, enabled_key, interval_key, lifetime_key, max_key)
@@ -203,6 +203,10 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
 
         lobby_system.add_score(name, S.point_powerup_value)
         pdata.race_score = pdata.race_score + S.point_powerup_value
+        if lightcycles_stats then
+            lightcycles_stats.record_powerup(name, "point")
+            lightcycles_stats.record_points(name, S.point_powerup_value)
+        end
         lobby_system.hud.update_all_scoreboards()
         lightcycles.hud.update_race_table()
         lightcycles.sounds.play_point_pickup(rounded)
@@ -211,6 +215,9 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
         local racer_count = 0
         for _ in pairs(lightcycles.players) do racer_count = racer_count + 1 end
         if racer_count == 1 and had_point_powerups_this_match and #active_point_powerups == 0 then
+            if lightcycles_stats then
+                lightcycles_stats.record_solo_clear(name)
+            end
             lightcycles.end_match(name)
         end
     end
@@ -219,6 +226,9 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
         minetest.set_node(rounded, { name = "air" })
         boost_powerup.remove_at(rounded)
         pdata.boost = 100
+        if lightcycles_stats then
+            lightcycles_stats.record_powerup(name, "boost")
+        end
         lightcycles.sounds.play_boost_pickup(rounded)
         minetest.chat_send_all("[Lightcycles] " .. name .. " picked up a boost powerup!")
     end
@@ -227,6 +237,9 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
         minetest.set_node(rounded, { name = "air" })
         shield_powerup.remove_at(rounded)
         pdata.shield = (pdata.shield or 0) + 1
+        if lightcycles_stats then
+            lightcycles_stats.record_powerup(name, "shield")
+        end
         lightcycles.hud.update_shield(minetest.get_player_by_name(name), pdata.shield)
         lightcycles.sounds.play_shield_pickup(rounded)
         minetest.chat_send_all("[Lightcycles] " .. name .. " picked up a shield (" .. pdata.shield .. " now).")
@@ -236,6 +249,9 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
         minetest.set_node(rounded, { name = "air" })
         laser_powerup.remove_at(rounded)
         pdata.laser = (pdata.laser or 0) + S.laser_per_pickup
+        if lightcycles_stats then
+            lightcycles_stats.record_powerup(name, "laser")
+        end
         lightcycles.hud.update_laser(minetest.get_player_by_name(name), pdata.laser)
         lightcycles.sounds.play_laser_pickup(rounded)
         minetest.chat_send_all("[Lightcycles] " .. name .. " picked up laser (" .. pdata.laser .. " now).")
@@ -245,6 +261,9 @@ function lightcycles.check_powerup_pickup(name, pdata, pos)
         minetest.set_node(rounded, { name = "air" })
         rocket_powerup.remove_at(rounded)
         pdata.rocket = (pdata.rocket or 0) + S.rocket_per_pickup
+        if lightcycles_stats then
+            lightcycles_stats.record_powerup(name, "rocket")
+        end
         lightcycles.hud.update_rocket(minetest.get_player_by_name(name), pdata.rocket)
         lightcycles.sounds.play_rocket_pickup(rounded)
         minetest.chat_send_all("[Lightcycles] " .. name .. " picked up rocket (" .. pdata.rocket .. " now).")

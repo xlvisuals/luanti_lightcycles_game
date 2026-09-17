@@ -61,7 +61,7 @@ function lobby_system.register_game(def)
     if def.matches_per_game then S.matches_per_game = def.matches_per_game end
 
     minetest.register_chatcommand(def.command or "lobby", {
-        params = "[join|leave|start|score|help|menu]",
+        params = "[join|leave|start|score|help|highscores|menu]",
         description = (def.title or "Lobby") .. " commands (run with no arguments to open the panel)",
         func = function(name, param)
             param = (param or ""):match("^%s*(.-)%s*$")
@@ -83,13 +83,20 @@ function lobby_system.register_game(def)
                 else
                     minetest.chat_send_player(name, "No help available for this game.")
                 end
+            elseif param == "highscores" then
+                local g = game()
+                if g and g.show_highscores then
+                    g.show_highscores(name)
+                else
+                    minetest.chat_send_player(name, "No high scores available for this game.")
+                end
             else
                 local g = game()
                 local handled = g and g.on_extra_command and g.on_extra_command(name, param)
                 if not handled then
                     minetest.chat_send_player(name,
                         "Usage: /" .. (def.command or "lobby")
-                        .. " (opens the panel) | join | leave | start | score | help")
+                        .. " (opens the panel) | join | leave | start | score | help | highscores")
                 end
             end
             return true
@@ -300,6 +307,10 @@ function lobby_system.apply_pending_new_game()
     pending_new_game = false
     lobby_system.setup_new_game()
     return true
+end
+
+function lobby_system.end_game_session()
+    pending_new_game = true
 end
 
 function lobby_system.check_matches_per_game_winner()

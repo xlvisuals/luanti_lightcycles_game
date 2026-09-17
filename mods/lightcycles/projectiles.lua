@@ -68,6 +68,10 @@ function lightcycles.fire_laser(name, pos, yaw)
         kind = "laser",
     })
 
+    if lightcycles_stats then
+        lightcycles_stats.record_shot(name, "laser")
+    end
+
     lightcycles.sounds.play_shoot_laser(pos)
 end
 
@@ -109,6 +113,10 @@ function lightcycles.fire_rocket(name, pos, yaw)
         trail_spawner = trail_spawner,
     })
 
+    if lightcycles_stats then
+        lightcycles_stats.record_shot(name, "rocket")
+    end
+
     lightcycles.sounds.play_shoot_rocket(pos)
 end
 
@@ -119,6 +127,8 @@ local function explode_rocket(center, shooter_name)
     local y = S.arena_center.y + 1
     lightcycles.sounds.play_rocket_explosion({ x = cx, y = y, z = cz })
     lightcycles.spawn_rocket_blast_effect({ x = cx, y = y, z = cz })
+
+    local hit_opponent = false
 
     for dx = -BLAST_RADIUS, BLAST_RADIUS do
         for dz = -BLAST_RADIUS, BLAST_RADIUS do
@@ -136,6 +146,7 @@ local function explode_rocket(center, shooter_name)
                     if cpos then
                         local rp = vector.round(cpos)
                         if rp.x == p.x and rp.z == p.z then
+                            hit_opponent = true
                             if not try_shield_block(rname, p) then
                                 if rname == shooter_name then
                                     lightcycles.eliminate(rname, rname
@@ -148,6 +159,10 @@ local function explode_rocket(center, shooter_name)
                                         lobby_system.hud.update_all_scoreboards()
                                         lightcycles.hud.update_race_table()
                                     end
+                                    if lightcycles_stats then
+                                        lightcycles_stats.record_kill(shooter_name)
+                                        lightcycles_stats.record_points(shooter_name, S.kill_by_shot_points)
+                                    end
                                     lightcycles.eliminate(rname, rname .. " was derezzed by " .. shooter_name
                                         .. "'s rocket! (+" .. S.kill_by_shot_points .. " for " .. shooter_name .. ")")
                                 end
@@ -157,6 +172,10 @@ local function explode_rocket(center, shooter_name)
                 end
             end
         end
+    end
+
+    if hit_opponent and lightcycles_stats then
+        lightcycles_stats.record_hit(shooter_name, "rocket")
     end
 end
 
@@ -208,6 +227,9 @@ minetest.register_globalstep(function(dtime)
                     local hit_pdata = lightcycles.players[hit_name]
                     explode_rocket(vector.round(rounded_hit_pos), p.shooter_name)
                 else
+                    if lightcycles_stats then
+                        lightcycles_stats.record_hit(p.shooter_name, "laser")
+                    end
                     if not try_shield_block(hit_name, rounded_hit_pos) then
                         local shooter_pdata = lightcycles.players[p.shooter_name]
                         if shooter_pdata and shooter_pdata.alive then
@@ -215,6 +237,10 @@ minetest.register_globalstep(function(dtime)
                             shooter_pdata.race_score = shooter_pdata.race_score + S.kill_by_shot_points
                             lobby_system.hud.update_all_scoreboards()
                             lightcycles.hud.update_race_table()
+                        end
+                        if lightcycles_stats then
+                            lightcycles_stats.record_kill(p.shooter_name)
+                            lightcycles_stats.record_points(p.shooter_name, S.kill_by_shot_points)
                         end
                         lightcycles.eliminate(hit_name, hit_name .. " was derezzed by " .. p.shooter_name
                             .. "'s laser! (+" .. S.kill_by_shot_points .. " for " .. p.shooter_name .. ")")

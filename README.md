@@ -142,6 +142,25 @@ The score table shows each racer's name, rank in the current race, race score (i
 - RS : Race Score - points earned in the current race. Race Rank points are awarded at the end of the race.
 - GS : Game Score - sum of all Race Scores.
 
+### High Scores
+
+The score table above only reflects the game currently in progress —
+Lightcycles separately keeps a permanent high-score record that survives
+server restarts, split into two boards:
+
+- **Multiplayer** — every player who's played a multiplayer race (a
+  race with more than one racer — bots count toward that headcount, but
+  don't get an entry of their own): games played, games won, total points
+  scored across every race, and laser/rocket hit percentage. Sorted by
+  total points, highest first.
+- **Soloplayer** — each player's personal-best (fastest) time to collect
+  every point powerup on a given map, solo. One entry per player per map,
+  only replaced when a later run beats their existing best. Sorted by
+  time, fastest first.
+
+Open it from the lobby panel — **High Scores**, next to **Help** — or
+with **`/lc highscores`**.
+
 ### Powerups
 
 Five kinds may appear on a given map, depending on how it's set up (an
@@ -192,6 +211,7 @@ Everyone:
 - **`/lc start`** — start a race
 - **`/lc score`** — shows your current score in chat
 - **`/lc help`** — opens the in-game help screen
+- **`/lc highscores`** — opens the persistent High Scores panel
 
 Admin-only:
 

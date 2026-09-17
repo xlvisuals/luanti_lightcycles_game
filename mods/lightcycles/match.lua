@@ -12,12 +12,12 @@ lightcycles.elimination_batches = {}
 
 
 local function spawn_bots(real_count)
-    if S.bot_count <= 0 then return end
+    if S.bot_count <= 0 then return 0 end
 
     local spawn_points = lightcycles.spawn_points()
     local max_total = math.min(#spawn_points, #S.colors)
     local bot_total = math.max(0, math.min(S.bot_count, max_total - real_count))
-    if bot_total <= 0 then return end
+    if bot_total <= 0 then return 0 end
 
     for i = 1, bot_total do
         local index = max_total - i + 1
@@ -64,6 +64,8 @@ local function spawn_bots(real_count)
             end)
         end
     end
+
+    return bot_total
 end
 
 local function despawn_all_bots()
@@ -83,6 +85,10 @@ local function mark_eliminated(name, custom_message)
 
     pdata.alive = false
     alive_count = alive_count - 1
+
+    if lightcycles_stats then
+        lightcycles_stats.record_death(name)
+    end
 
     if S.remove_walls_on_eliminate then
         lightcycles.clear_color_trail(pdata.color)
@@ -178,6 +184,12 @@ local function count_players()
     return n
 end
 
+local function joined_participant_count()
+    local n = S.bot_count
+    for _ in pairs(lobby_system.state.lobby) do n = n + 1 end
+    return n
+end
+
 local function award_match_points(top_tier_names)
     if top_tier_names == nil then return end
 
@@ -196,6 +208,9 @@ local function award_match_points(top_tier_names)
                     pdata.race_score = pdata.race_score + points
                     minetest.log("action", string.format("[lightcycles] Awarded %d points to '" .. name .. "'. Total: %d", points, pdata.race_score))
                 end
+                if lightcycles_stats then
+                    lightcycles_stats.record_points(name, points)
+                end
             end
         end
     end
@@ -207,6 +222,10 @@ lightcycles.match_generation = 0
 local match_start_us = nil      -- set in on_match_prepare, i.e. roughly when Start was clicked
 local last_match_duration = nil -- seconds (integer), the most recently *completed* match's duration
 
+local match_total_participants = 0
+
+local pending_match_is_new_game = false
+
 local function elapsed_race_seconds()
     if not match_start_us then return 0 end
     local elapsed = (minetest.get_us_time() - match_start_us) / 1000000 - lobby_system.settings.countdown_seconds
@@ -217,6 +236,12 @@ lobby_system.set_match_counter_suffix(function()
     local phase = lobby_system.state.phase
     if phase == "playing" or phase == "countdown" then
         local elapsed = elapsed_race_seconds()
+        if match_total_participants <= 1 then
+            if S.match_max_duration then
+                return elapsed .. "/" .. S.match_max_duration
+            end
+            return elapsed .. "s"
+        end
         if S.match_max_duration then
             return math.max(0, S.match_max_duration - elapsed) .. "s"
         end
@@ -294,6 +319,28 @@ finish_match = function(top_tier_names, message)
     end
     local session_ended = overall_message or game_over_message
 
+    if match_total_participants <= 1 then
+        lobby_system.end_game_session()
+    end
+
+    if lightcycles_stats then
+        if top_tier_names and #top_tier_names == 1 then
+            lightcycles_stats.record_race_win(top_tier_names[1])
+        end
+        if session_ended then
+            local best_name, best_score = nil, -1
+            for _, n in ipairs(lobby_system.all_known_players()) do
+                local s = lobby_system.get_score(n)
+                if s > best_score then
+                    best_name, best_score = n, s
+                end
+            end
+            if best_name then
+                lightcycles_stats.record_game_win(best_name)
+            end
+        end
+    end
+
     local return_delay = session_ended and 10 or 6
 
     local flash_duration = return_delay
@@ -351,7 +398,7 @@ local function help_formspec()
 		"- W : boost (spends the boost bar).\n",
 		"- Shift : quick-look behind you while held.\n",
 		"- Space or Left-click : fire a laser shot (requires laser).\n",
-		"- E (Aux key) or Right-click : fire a rocket (requires rocket) while racing. Outside of a race, E instead reopens the lobby menu.\n",
+        "- E (Aux key) or Right-click : fire a rocket (requires rocket) while racing. Outside of a race, E instead reopens the lobby menu.\n",
 		"- C : change camera view.\n",
 		"\n",
 		"<b>Scoring</b>\n",
@@ -546,10 +593,19 @@ lobby_system.register_game({
             lightcycles.start_rocket_powerup_loop(this_generation)
         end
 
-        spawn_bots(count)
+        local bot_total = spawn_bots(count)
+        match_total_participants = count + bot_total
+
+        lobby_system.set_matches_per_game(match_total_participants <= 1 and 1 or S.matches_per_session)
+
+        pending_match_is_new_game = (lobby_system.state.match_number == 1)
     end,
 
     on_racing_started = function()
+        if lightcycles_stats then
+            lightcycles_stats.begin_match(match_total_participants, pending_match_is_new_game)
+        end
+
         for _, player in ipairs(minetest.get_connected_players()) do
             lightcycles.hud.set_race_table_visible(player, true)
         end
@@ -584,6 +640,10 @@ lobby_system.register_game({
         }
         lightcycles.players[name] = pdata
         alive_count = alive_count + 1
+
+        if lightcycles_stats then
+            lightcycles_stats.record_race_start(name)
+        end
 
         if player then
             player:set_physics_override({ speed = 0, jump = 0, gravity = 0 })
@@ -629,6 +689,7 @@ lobby_system.register_game({
     extra_formspec = function(name)
         local fs = {}
         local is_admin = minetest.check_player_privs(name, { lobby_admin = true })
+        local is_multiplayer = joined_participant_count() > 1
 
         if is_admin then
             local can_rebuild = lobby_system.state.phase == "lobby"
@@ -652,56 +713,62 @@ lobby_system.register_game({
                     (can_rebuild and "Load Map" or "Load (wait)") .. "]")
             end
 
-            local race_options = { 1, 3, 5, 7, 10, 15, 20 }
-            local races_idx = 4 -- default: "7", if nothing below matches better
-            for i, n in ipairs(race_options) do
-                if n == S.matches_per_session then races_idx = i; break end
-            end
-            table.insert(fs, "label[0.4,5.8;Races per game:]")
-            table.insert(fs, "dropdown[2.8,5.50;1.40,0.7;lc_races_select;" ..
-                table.concat(race_options, ",") .. ";" .. races_idx .. ";true]")
-            table.insert(fs, "button[4.35,5.5;3.75,0.7;lc_reset_game;" ..
-                (can_reset and "Reset Game" or "Reset (wait for lobby)") .. "]")
-
-            local points_label = S.point_powerups_enabled
-                and "Point Powerups: ON" or "Point Powerups: off"
-            local boost_label = S.boost_powerups_enabled
-                and "Boost Powerups: ON" or "Boost Powerups: off"
-            table.insert(fs, "button[0.4,6.4;3.75,0.8;lc_point_powerups_toggle;" ..
-                minetest.formspec_escape(points_label) .. "]")
-            table.insert(fs, "button[4.35,6.4;3.75,0.8;lc_boost_powerups_toggle;" ..
-                minetest.formspec_escape(boost_label) .. "]")
-
-            local shield_label = S.shield_powerups_enabled
-                and "Shield Powerups: ON" or "Shield Powerups: off"
-            local laser_label = S.laser_powerups_enabled
-                and "Laser Powerups: ON" or "Laser Powerups: off"
-            table.insert(fs, "button[0.4,7.3;3.75,0.8;lc_shield_powerups_toggle;" ..
-                minetest.formspec_escape(shield_label) .. "]")
-            table.insert(fs, "button[4.35,7.3;3.75,0.8;lc_laser_powerups_toggle;" ..
-                minetest.formspec_escape(laser_label) .. "]")
-
-            local walls_label = S.remove_walls_on_eliminate
-                and "On derez: ERASE trails"
-                or "On derez: KEEP trails"
-            table.insert(fs, "button[0.4,8.2;3.75,0.8;lc_walls_toggle;" ..
-                minetest.formspec_escape(walls_label) .. "]")
-            local rocket_label = S.rocket_powerups_enabled
-                and "Rocket Powerups: ON" or "Rocket Powerups: off"
-            table.insert(fs, "button[4.35,8.2;3.75,0.8;lc_rocket_powerups_toggle;" ..
-                minetest.formspec_escape(rocket_label) .. "]")
-
-            table.insert(fs, "label[0.4,9.45;Bots:]")
-            table.insert(fs, "dropdown[1.25,9.15;1.5,0.7;lc_bot_count;0,1,2,3,4,5,6,7;" ..
+            table.insert(fs, "label[0.4,5.8;Bots:]")
+            table.insert(fs, "dropdown[1.25,5.50;1.5,0.7;lc_bot_count;0,1,2,3,4,5,6,7;" ..
                 (S.bot_count + 1) .. ";true]")
             local behavior_options = { "random", "passive", "opportunistic", "aggressive" }
             local behavior_idx = 1
             for i, b in ipairs(behavior_options) do
                 if b == S.bot_behavior then behavior_idx = i; break end
             end
-            table.insert(fs, "label[3.0,9.45;Behavior:]")
-            table.insert(fs, "dropdown[4.4,9.15;3.7,0.7;lc_bot_behavior;" ..
+            table.insert(fs, "label[3.0,5.8;Behavior:]")
+            table.insert(fs, "dropdown[4.4,5.50;3.7,0.7;lc_bot_behavior;" ..
                 table.concat(behavior_options, ",") .. ";" .. behavior_idx .. ";true]")
+
+            if is_multiplayer then
+                local race_options = { 1, 3, 5, 7, 10, 15, 20 }
+                local races_idx = 4 -- default: "7", if nothing below matches better
+                for i, n in ipairs(race_options) do
+                    if n == S.matches_per_session then races_idx = i; break end
+                end
+                table.insert(fs, "label[0.4,6.65;Races per game:]")
+                table.insert(fs, "dropdown[2.8,6.35;1.40,0.7;lc_races_select;" ..
+                    table.concat(race_options, ",") .. ";" .. races_idx .. ";true]")
+                table.insert(fs, "button[4.35,6.35;3.75,0.7;lc_reset_game;" ..
+                    (can_reset and "Reset Game" or "Reset (wait for lobby)") .. "]")
+            else
+                table.insert(fs, "label[0.4,6.65;Races per game / Reset Game: "
+                    .. "multiplayer only (2+ players/bots joined)]")
+            end
+
+            local points_label = S.point_powerups_enabled
+                and "Point Powerups: ON" or "Point Powerups: off"
+            local boost_label = S.boost_powerups_enabled
+                and "Boost Powerups: ON" or "Boost Powerups: off"
+            table.insert(fs, "button[0.4,7.5;3.75,0.8;lc_point_powerups_toggle;" ..
+                minetest.formspec_escape(points_label) .. "]")
+            table.insert(fs, "button[4.35,7.5;3.75,0.8;lc_boost_powerups_toggle;" ..
+                minetest.formspec_escape(boost_label) .. "]")
+
+            local shield_label = S.shield_powerups_enabled
+                and "Shield Powerups: ON" or "Shield Powerups: off"
+            local laser_label = S.laser_powerups_enabled
+                and "Laser Powerups: ON" or "Laser Powerups: off"
+            table.insert(fs, "button[0.4,8.4;3.75,0.8;lc_shield_powerups_toggle;" ..
+                minetest.formspec_escape(shield_label) .. "]")
+            table.insert(fs, "button[4.35,8.4;3.75,0.8;lc_laser_powerups_toggle;" ..
+                minetest.formspec_escape(laser_label) .. "]")
+
+            local walls_label = S.remove_walls_on_eliminate
+                and "On derez: ERASE trails"
+                or "On derez: KEEP trails"
+            table.insert(fs, "button[0.4,9.3;3.75,0.8;lc_walls_toggle;" ..
+                minetest.formspec_escape(walls_label) .. "]")
+            local rocket_label = S.rocket_powerups_enabled
+                and "Rocket Powerups: ON" or "Rocket Powerups: off"
+            table.insert(fs, "button[4.35,9.3;3.75,0.8;lc_rocket_powerups_toggle;" ..
+                minetest.formspec_escape(rocket_label) .. "]")
+
             table.insert(fs, "button[0.4,10.8;3.75,0.8;lc_build_mode;Enter Build Mode]")
             table.insert(fs, "button[4.35,10.8;3.75,0.8;lc_export_map;Save Map]")
         else
@@ -716,28 +783,32 @@ lobby_system.register_game({
             end
             table.insert(fs, "label[0.4,4.95;Map: " .. minetest.formspec_escape(map_display) .. "]")
 
-            table.insert(fs, "label[0.4,5.75;Races per game: " .. S.matches_per_session .. "]")
-
-            table.insert(fs, "label[0.4,6.55;Point Powerups: "
-                .. (S.point_powerups_enabled and "ON" or "off") .. "]")
-            table.insert(fs, "label[4.35,6.55;Boost Powerups: "
-                .. (S.boost_powerups_enabled and "ON" or "off") .. "]")
-
-            table.insert(fs, "label[0.4,7.35;Shield Powerups: "
-                .. (S.shield_powerups_enabled and "ON" or "off") .. "]")
-            table.insert(fs, "label[4.35,7.35;Laser Powerups: "
-                .. (S.laser_powerups_enabled and "ON" or "off") .. "]")
-
-            table.insert(fs, "label[0.4,8.15;On derez: "
-                .. (S.remove_walls_on_eliminate and "ERASE trails" or "KEEP trails") .. "]")
-            table.insert(fs, "label[4.35,8.15;Rocket Powerups: "
-                .. (S.rocket_powerups_enabled and "ON" or "off") .. "]")
-
-            table.insert(fs, "label[0.4,8.95;Bots: " .. S.bot_count .. "]")
+            table.insert(fs, "label[0.4,5.75;Bots: " .. S.bot_count .. "]")
             if S.bot_count > 0 then
-                table.insert(fs, "label[3.0,8.95;Behavior: "
+                table.insert(fs, "label[3.0,5.75;Behavior: "
                     .. minetest.formspec_escape(S.bot_behavior) .. "]")
             end
+
+            if is_multiplayer then
+                table.insert(fs, "label[0.4,6.55;Races per game: " .. S.matches_per_session .. "]")
+            else
+                table.insert(fs, "label[0.4,6.55;Races per game: multiplayer only]")
+            end
+
+            table.insert(fs, "label[0.4,7.35;Point Powerups: "
+                .. (S.point_powerups_enabled and "ON" or "off") .. "]")
+            table.insert(fs, "label[4.35,7.35;Boost Powerups: "
+                .. (S.boost_powerups_enabled and "ON" or "off") .. "]")
+
+            table.insert(fs, "label[0.4,8.15;Shield Powerups: "
+                .. (S.shield_powerups_enabled and "ON" or "off") .. "]")
+            table.insert(fs, "label[4.35,8.15;Laser Powerups: "
+                .. (S.laser_powerups_enabled and "ON" or "off") .. "]")
+
+            table.insert(fs, "label[0.4,8.95;On derez: "
+                .. (S.remove_walls_on_eliminate and "ERASE trails" or "KEEP trails") .. "]")
+            table.insert(fs, "label[4.35,8.95;Rocket Powerups: "
+                .. (S.rocket_powerups_enabled and "ON" or "off") .. "]")
         end
 
         return table.concat(fs, "")
@@ -839,6 +910,11 @@ lobby_system.register_game({
             return true
         elseif fields.lc_reset_game then
             if is_admin then
+                if joined_participant_count() <= 1 then
+                    minetest.chat_send_player(name,
+                        "[Lightcycles] Reset Game only applies once there's more than one player/bot.")
+                    return true
+                end
                 local phase = lobby_system.state.phase
                 if phase == "lobby" or phase == "ended" then
                     lobby_system.setup_new_game()
@@ -878,6 +954,11 @@ lobby_system.register_game({
             return true
         elseif fields.lc_races_select then
             if is_admin then
+                if joined_participant_count() <= 1 then
+                    minetest.chat_send_player(name,
+                        "[Lightcycles] Races per game only applies once there's more than one player/bot.")
+                    return true
+                end
                 local race_options = { 1, 3, 5, 7, 10, 15, 20 }
                 local idx = tonumber(fields.lc_races_select)
                 local n = idx and race_options[idx]

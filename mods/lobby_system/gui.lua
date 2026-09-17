@@ -48,6 +48,10 @@ function lobby_system.gui.build(name)
         table.insert(fs, "button[6.05,0.3;2,0.6;ls_help;Help]")
     end
 
+    if g and g.show_highscores then
+        table.insert(fs, "button[3.85,0.3;2.1,0.6;ls_highscores;High Scores]")
+    end
+
     if state.phase == "lobby" then
         if in_lobby then
             table.insert(fs, "button[0.4,2.9;3.85,0.8;ls_leave;Leave Game]")
@@ -168,6 +172,8 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
         end
     elseif fields.ls_help then
         if g and g.show_help then g.show_help(name) end
+    elseif fields.ls_highscores then
+        if g and g.show_highscores then g.show_highscores(name) end
     elseif g and g.on_extra_fields then
         if g.on_extra_fields(name, fields) then
             lobby_system.gui.show(name)
