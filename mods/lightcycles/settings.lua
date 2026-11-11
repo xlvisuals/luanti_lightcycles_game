@@ -50,6 +50,8 @@ lightcycles.settings = {
 
     player_eye_height          = 1.0,
 
+    camera_turn_time           = 0.2,
+
 
 
     base_speed                = 6,    -- nodes/second, normal cruising speed

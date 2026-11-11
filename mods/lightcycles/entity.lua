@@ -47,6 +47,8 @@ function lightcycles.spawn_cycle(player, pdata, color, pos, yaw)
 
     player:set_look_horizontal(yaw)
     player:set_look_vertical(0)
+    pdata.cam_easing = false
+    pdata.cam_yaw = yaw
     return obj
 end
 

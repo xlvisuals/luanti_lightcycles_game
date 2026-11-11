@@ -12,6 +12,37 @@ local function wall_pos_at(pos)
     return { x = pos.x, y = S.arena_center.y + 1, z = pos.z }
 end
 
+local function angle_diff(a, b)
+    local d = (b - a) % (2 * math.pi)
+    if d > math.pi then d = d - 2 * math.pi end
+    return d
+end
+
+local function update_camera(player, pdata, target_yaw, start, dtime)
+    local turn_time = S.camera_turn_time or 0
+    if turn_time <= 0 then
+        if start then player:set_look_horizontal(target_yaw) end
+        pdata.cam_easing = false
+        return
+    end
+
+    if start and not pdata.cam_easing then
+        pdata.cam_yaw = player:get_look_horizontal()
+        pdata.cam_easing = true
+    end
+    if not pdata.cam_easing then return end
+
+    local diff = angle_diff(pdata.cam_yaw, target_yaw)
+    local k = 1 - math.exp(-3 * dtime / turn_time)
+    if math.abs(diff) < 0.02 then
+        pdata.cam_yaw = target_yaw
+        pdata.cam_easing = false
+    else
+        pdata.cam_yaw = (pdata.cam_yaw + diff * k) % (2 * math.pi)
+    end
+    player:set_look_horizontal(pdata.cam_yaw)
+end
+
 local function snap_to_grid(obj, offset)
     local pos = obj:get_pos()
     if pos then
@@ -64,11 +95,16 @@ minetest.register_globalstep(function(dtime)
                 pdata.yaw = pdata.yaw % (2 * math.pi)
 
                 if player then
-                    if controls.sneak then
-                        player:set_look_horizontal(pdata.yaw + math.pi)
-                    elseif turned or pdata.was_sneak then
-                        player:set_look_horizontal(pdata.yaw)
+                    local target = controls.sneak and (pdata.yaw + math.pi) or pdata.yaw
+                    local start = turned or (controls.sneak ~= (pdata.was_sneak or false))
+                    if controls.sneak and not pdata.cam_easing then
+                        if (S.camera_turn_time or 0) <= 0 then
+                            player:set_look_horizontal(target)
+                        else
+                            start = true
+                        end
                     end
+                    update_camera(player, pdata, target % (2 * math.pi), start, dtime)
                 end
                 pdata.was_sneak = controls.sneak
 
